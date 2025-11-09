@@ -28,21 +28,25 @@ export const cedaRouter = createTRPCRouter({
 				);
 			}
 
+			// Construct the API URL - use NEXT_PUBLIC_APP_URL if available, otherwise construct from Vercel env vars
+			const baseUrl =
+				process.env.NEXT_PUBLIC_APP_URL ??
+				(process.env.VERCEL_URL
+					? `https://${process.env.VERCEL_URL}`
+					: "http://localhost:3000");
+
 			// Call the CEDA API to calculate emissions
-			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/ceda`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						category: input.category,
-						country: userData.country,
-						spend_amount: input.spendAmount,
-					}),
+			const response = await fetch(`${baseUrl}/api/ceda`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify({
+					category: input.category,
+					country: userData.country,
+					spend_amount: input.spendAmount,
+				}),
+			});
 
 			if (!response.ok) {
 				const error = await response.json();
