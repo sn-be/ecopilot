@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import {
 	type BusinessDataInput,
@@ -20,6 +20,7 @@ import {
 	onboardingData,
 	carbonFootprints,
 	dashboards,
+	completedActions,
 } from "@/server/db/schema";
 
 export const footprintRouter = createTRPCRouter({
@@ -564,6 +565,13 @@ Focus on waste reduction, sustainable procurement, or employee engagement.`,
 				return null;
 			}
 
+			// Get completed actions for this user
+			const completed = await ctx.db.query.completedActions.findMany({
+				where: eq(completedActions.userId, input.userId),
+			});
+
+			const completedActionIds = new Set(completed.map((a) => a.actionId));
+
 			return {
 				footprint: {
 					...footprint,
@@ -580,6 +588,42 @@ Focus on waste reduction, sustainable procurement, or employee engagement.`,
 					quickWins: JSON.parse(dashboard.quickWins as string),
 					fullActionPlan: JSON.parse(dashboard.fullActionPlan as string),
 				},
+				completedActionIds: Array.from(completedActionIds),
 			};
+		}),
+
+	/**
+	 * Toggle action completion status
+	 */
+	toggleActionCompletion: publicProcedure
+		.input(
+			z.object({
+				userId: z.string(),
+				actionId: z.string(),
+				actionType: z.enum(["priority", "quickwin", "actionplan"]),
+				completed: z.boolean(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			if (input.completed) {
+				// Mark as completed
+				await ctx.db.insert(completedActions).values({
+					userId: input.userId,
+					actionId: input.actionId,
+					actionType: input.actionType,
+				});
+			} else {
+				// Mark as not completed (delete the record)
+				await ctx.db
+					.delete(completedActions)
+					.where(
+						and(
+							eq(completedActions.userId, input.userId),
+							eq(completedActions.actionId, input.actionId),
+						),
+					);
+			}
+
+			return { success: true };
 		}),
 });

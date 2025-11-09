@@ -2,8 +2,6 @@
 
 import { UserButton } from "@clerk/nextjs";
 import {
-	BarChart3,
-	CheckCircle2,
 	Factory,
 	Flame,
 	Home,
@@ -18,7 +16,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, Label, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +34,7 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { EcoPilotDashboard } from "@/lib/ai-schemas";
@@ -45,11 +44,88 @@ interface DashboardWithSidebarProps {
 	userId: string;
 }
 
+// Helper function to generate consistent action IDs
+function generateActionId(title: string): string {
+	// Simple hash function for consistent IDs
+	let hash = 0;
+	for (let i = 0; i < title.length; i++) {
+		const char = title.charCodeAt(i);
+		hash = (hash << 5) - hash + char;
+		hash = hash & hash; // Convert to 32bit integer
+	}
+	return `action_${Math.abs(hash)}`;
+}
+
 export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 	const router = useRouter();
+	const utils = api.useUtils();
 	const { data, isLoading, error } = api.footprint.getLatest.useQuery({
 		userId,
 	});
+
+	// Local state for optimistic updates
+	const [localCompletedIds, setLocalCompletedIds] = useState<Set<string>>(
+		new Set(),
+	);
+
+	// Sync with server data
+	useEffect(() => {
+		if (data?.completedActionIds) {
+			setLocalCompletedIds(new Set(data.completedActionIds));
+		}
+	}, [data?.completedActionIds]);
+
+	const toggleActionMutation = api.footprint.toggleActionCompletion.useMutation(
+		{
+			onMutate: async (variables) => {
+				// Optimistic update
+				setLocalCompletedIds((prev) => {
+					const newSet = new Set(prev);
+					if (variables.completed) {
+						newSet.add(variables.actionId);
+					} else {
+						newSet.delete(variables.actionId);
+					}
+					return newSet;
+				});
+			},
+			onError: (_error, variables) => {
+				// Revert on error
+				setLocalCompletedIds((prev) => {
+					const newSet = new Set(prev);
+					if (variables.completed) {
+						newSet.delete(variables.actionId);
+					} else {
+						newSet.add(variables.actionId);
+					}
+					return newSet;
+				});
+			},
+			onSuccess: () => {
+				// Refetch to ensure consistency
+				void utils.footprint.getLatest.invalidate({ userId });
+			},
+		},
+	);
+
+	const handleToggleAction = (
+		title: string,
+		actionType: "priority" | "quickwin" | "actionplan",
+	) => {
+		const actionId = generateActionId(title);
+		const isCompleted = localCompletedIds.has(actionId);
+
+		toggleActionMutation.mutate({
+			userId,
+			actionId,
+			actionType,
+			completed: !isCompleted,
+		});
+	};
+
+	const isActionCompleted = (title: string) => {
+		return localCompletedIds.has(generateActionId(title));
+	};
 
 	const totalEmissions = useMemo(() => {
 		return data?.footprint.totalKgCO2eAnnual ?? 0;
@@ -58,18 +134,20 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 	// Prepare action plan impact chart data
 	const actionImpactData = useMemo(() => {
 		if (!data) return [];
-		
+
 		const impactCounts = {
 			High: 0,
 			Medium: 0,
 			Low: 0,
 		};
 
-		data.dashboard.fullActionPlan.forEach((action: EcoPilotDashboard["fullActionPlan"][number]) => {
-			if (action.impact in impactCounts) {
-				impactCounts[action.impact as keyof typeof impactCounts]++;
-			}
-		});
+		data.dashboard.fullActionPlan.forEach(
+			(action: EcoPilotDashboard["fullActionPlan"][number]) => {
+				if (action.impact in impactCounts) {
+					impactCounts[action.impact as keyof typeof impactCounts]++;
+				}
+			},
+		);
 
 		return [
 			{
@@ -174,7 +252,7 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 	return (
 		<div className="flex min-h-screen bg-background">
 			{/* Sidebar */}
-			<aside className="w-72 border-r bg-card shadow-sm">
+			<aside className="fixed top-0 left-0 h-screen w-72 border-r bg-card shadow-sm">
 				<div className="flex h-full flex-col">
 					{/* Logo/Header */}
 					<div className="border-b bg-gradient-to-br from-primary/10 to-primary/5 p-6">
@@ -192,7 +270,7 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 					</div>
 
 					{/* Navigation */}
-					<nav className="flex-1 space-y-1 p-4">
+					<nav className="flex-1 space-y-1 overflow-y-auto p-4">
 						<a
 							className="flex items-center gap-3 rounded-lg bg-primary px-4 py-3 text-primary-foreground shadow-sm transition-all hover:shadow-md"
 							href="/dashboard"
@@ -213,13 +291,6 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 						>
 							<Target className="size-5 stroke-current" />
 							<span>Action Plan</span>
-						</a>
-						<a
-							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-							href="/dashboard/analytics"
-						>
-							<BarChart3 className="size-5 stroke-current" />
-							<span>Analytics</span>
 						</a>
 						<a
 							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
@@ -244,24 +315,47 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 			</aside>
 
 			{/* Main Content */}
-			<main className="flex-1 overflow-auto">
+			<main className="ml-72 flex-1 overflow-auto">
 				<div className="@container/main flex flex-1 flex-col">
 					<div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-								{/* Executive Summary */}
-								<div className="px-4 lg:px-6">
-							<Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-xs">
-								<CardHeader>
-									<CardTitle className="flex items-center gap-2">
-										<div className="rounded-lg bg-primary/10 p-2">
-											<Leaf className="size-5 stroke-current text-primary" />
+						{/* Executive Summary */}
+						<div className="px-4 lg:px-6">
+							<Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-lg">
+								<CardHeader className="space-y-3 pb-4">
+									<div className="flex items-center gap-3">
+										<div className="rounded-lg bg-primary/10 p-2.5">
+											<Leaf className="size-6 stroke-current text-primary" />
 										</div>
-										Executive Summary
-									</CardTitle>
+										<div className="flex-1">
+											<CardTitle className="font-bold text-2xl tracking-tight">
+												Executive Summary
+											</CardTitle>
+											<p className="mt-1 text-muted-foreground text-sm">
+												AI-Generated Insights
+											</p>
+										</div>
+										<Badge
+											className="bg-primary/10 text-primary"
+											variant="secondary"
+										>
+											<Lightbulb className="mr-1 size-3 stroke-current" />
+											AI Analysis
+										</Badge>
+									</div>
 								</CardHeader>
-								<CardContent>
-									<p className="text-muted-foreground leading-relaxed">
-										{data.dashboard.executiveSummary}
-									</p>
+								<CardContent className="pt-2">
+									<div className="space-y-4">
+										<p className="font-medium text-foreground text-lg leading-relaxed">
+											{data.dashboard.executiveSummary}
+										</p>
+										<div className="flex items-center gap-2 border-primary/10 border-t pt-4">
+											<div className="flex size-2 rounded-full bg-primary/60" />
+											<p className="text-muted-foreground text-xs italic">
+												This summary was generated using advanced AI analysis of
+												your carbon footprint data
+											</p>
+										</div>
+									</div>
 								</CardContent>
 							</Card>
 						</div>
@@ -519,11 +613,9 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 							</div>
 						</div>
 
-				
-
 						{/* Prioritized Next Step */}
 						<div className="px-4 lg:px-6">
-							<Card className="overflow-hidden border-2 border-primary shadow-md pt-0">
+							<Card className="overflow-hidden border-2 border-primary pt-0 shadow-md">
 								<div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-6">
 									<div className="flex items-center justify-between">
 										<div className="flex items-center gap-2">
@@ -538,13 +630,35 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 									</div>
 								</div>
 								<CardContent className="space-y-6 pt-6">
-									<div>
-										<h3 className="font-bold text-2xl">
-											{data.dashboard.prioritizedNextStep.title}
-										</h3>
-										<p className="mt-3 text-muted-foreground leading-relaxed">
-											{data.dashboard.prioritizedNextStep.description}
-										</p>
+									<div className="flex items-start gap-4">
+										<Checkbox
+											checked={isActionCompleted(
+												data.dashboard.prioritizedNextStep.title,
+											)}
+											className="mt-1 size-6"
+											onCheckedChange={() =>
+												handleToggleAction(
+													data.dashboard.prioritizedNextStep.title,
+													"priority",
+												)
+											}
+										/>
+										<div className="flex-1">
+											<h3
+												className={`font-bold text-2xl transition-all ${
+													isActionCompleted(
+														data.dashboard.prioritizedNextStep.title,
+													)
+														? "text-muted-foreground line-through"
+														: ""
+												}`}
+											>
+												{data.dashboard.prioritizedNextStep.title}
+											</h3>
+											<p className="mt-3 text-muted-foreground leading-relaxed">
+												{data.dashboard.prioritizedNextStep.description}
+											</p>
+										</div>
 									</div>
 									<Separator />
 									<div className="grid gap-4 sm:grid-cols-3">
@@ -607,19 +721,40 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 									</div>
 								</CardHeader>
 								<CardContent>
-									<div className="grid gap-4 md:grid-cols-2">
+									<div className="space-y-3">
 										{data.dashboard.quickWins.map(
-											(win: EcoPilotDashboard["quickWins"][number]) => (
-												<div
-													className="group rounded-lg border bg-card p-4 transition-all hover:border-primary hover:shadow-md"
-													key={win.title}
-												>
-													<div className="flex items-start gap-3">
-														<div className="rounded-full bg-chart-4/10 p-2">
-															<CheckCircle2 className="size-4 stroke-current text-chart-4" />
+											(
+												win: EcoPilotDashboard["quickWins"][number],
+												index: number,
+											) => {
+												const isCompleted = isActionCompleted(win.title);
+												return (
+													<div
+														className={`group flex items-start gap-4 rounded-lg border bg-card p-4 transition-all hover:border-primary hover:shadow-md ${
+															isCompleted ? "opacity-60" : ""
+														}`}
+														key={win.title}
+													>
+														<Checkbox
+															checked={isCompleted}
+															className="mt-0.5 size-5"
+															onCheckedChange={() =>
+																handleToggleAction(win.title, "quickwin")
+															}
+														/>
+														<div className="flex items-center justify-center rounded-full bg-muted px-2.5 py-0.5">
+															<span className="font-semibold text-muted-foreground text-xs">
+																{index + 1}
+															</span>
 														</div>
 														<div className="flex-1 space-y-1">
-															<h4 className="font-semibold leading-tight group-hover:text-primary">
+															<h4
+																className={`font-semibold leading-tight transition-all ${
+																	isCompleted
+																		? "text-muted-foreground line-through"
+																		: "group-hover:text-primary"
+																}`}
+															>
 																{win.title}
 															</h4>
 															<p className="text-muted-foreground text-sm leading-relaxed">
@@ -627,14 +762,13 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 															</p>
 														</div>
 													</div>
-												</div>
-											),
+												);
+											},
 										)}
 									</div>
 								</CardContent>
 							</Card>
 						</div>
-
 					</div>
 				</div>
 			</main>
@@ -645,7 +779,7 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 function DashboardSkeleton() {
 	return (
 		<div className="flex min-h-screen bg-background">
-			<aside className="w-72 border-r bg-card shadow-sm">
+			<aside className="fixed top-0 left-0 h-screen w-72 border-r bg-card shadow-sm">
 				<div className="flex h-full flex-col">
 					<div className="border-b bg-gradient-to-br from-primary/10 to-primary/5 p-6">
 						<div className="flex items-center gap-3">
@@ -656,12 +790,10 @@ function DashboardSkeleton() {
 							</div>
 						</div>
 					</div>
-					<div className="flex-1 space-y-2 p-4">
-						{["home", "footprint", "actions", "analytics", "settings"].map(
-							(item) => (
-								<Skeleton className="h-12 w-full rounded-lg" key={item} />
-							),
-						)}
+					<div className="flex-1 space-y-2 overflow-y-auto p-4">
+						{["home", "footprint", "actions", "settings"].map((item) => (
+							<Skeleton className="h-12 w-full rounded-lg" key={item} />
+						))}
 					</div>
 					<div className="border-t bg-muted/30 p-4">
 						<div className="flex items-center gap-3">
@@ -674,7 +806,7 @@ function DashboardSkeleton() {
 					</div>
 				</div>
 			</aside>
-			<main className="flex-1 overflow-auto bg-muted/20 p-8">
+			<main className="ml-72 flex-1 overflow-auto bg-muted/20 p-8">
 				<div className="mx-auto max-w-7xl space-y-8">
 					<div className="space-y-2">
 						<Skeleton className="h-10 w-64" />

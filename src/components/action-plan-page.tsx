@@ -2,7 +2,6 @@
 
 import { UserButton } from "@clerk/nextjs";
 import {
-	BarChart3,
 	Filter,
 	Home,
 	Leaf,
@@ -23,6 +22,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { EcoPilotDashboard } from "@/lib/ai-schemas";
 import { api } from "@/trpc/react";
@@ -31,8 +31,21 @@ interface ActionPlanPageProps {
 	userId: string;
 }
 
+// Helper function to generate consistent action IDs
+function generateActionId(title: string): string {
+	// Simple hash function for consistent IDs
+	let hash = 0;
+	for (let i = 0; i < title.length; i++) {
+		const char = title.charCodeAt(i);
+		hash = (hash << 5) - hash + char;
+		hash = hash & hash; // Convert to 32bit integer
+	}
+	return `action_${Math.abs(hash)}`;
+}
+
 export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 	const router = useRouter();
+	const utils = api.useUtils();
 	const { data, isLoading, error } = api.footprint.getLatest.useQuery({
 		userId,
 	});
@@ -41,6 +54,67 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 	const [selectedImpact, setSelectedImpact] = useState<string | null>(null);
 	const [selectedCost, setSelectedCost] = useState<string | null>(null);
+
+	// Local state for optimistic updates
+	const [localCompletedIds, setLocalCompletedIds] = useState<Set<string>>(
+		new Set(),
+	);
+
+	// Sync with server data
+	useEffect(() => {
+		if (data?.completedActionIds) {
+			setLocalCompletedIds(new Set(data.completedActionIds));
+		}
+	}, [data?.completedActionIds]);
+
+	const toggleActionMutation = api.footprint.toggleActionCompletion.useMutation(
+		{
+			onMutate: async (variables) => {
+				// Optimistic update
+				setLocalCompletedIds((prev) => {
+					const newSet = new Set(prev);
+					if (variables.completed) {
+						newSet.add(variables.actionId);
+					} else {
+						newSet.delete(variables.actionId);
+					}
+					return newSet;
+				});
+			},
+			onError: (_error, variables) => {
+				// Revert on error
+				setLocalCompletedIds((prev) => {
+					const newSet = new Set(prev);
+					if (variables.completed) {
+						newSet.delete(variables.actionId);
+					} else {
+						newSet.add(variables.actionId);
+					}
+					return newSet;
+				});
+			},
+			onSuccess: () => {
+				// Refetch to ensure consistency
+				void utils.footprint.getLatest.invalidate({ userId });
+			},
+		},
+	);
+
+	const handleToggleAction = (title: string) => {
+		const actionId = generateActionId(title);
+		const isCompleted = localCompletedIds.has(actionId);
+
+		toggleActionMutation.mutate({
+			userId,
+			actionId,
+			actionType: "actionplan",
+			completed: !isCompleted,
+		});
+	};
+
+	const isActionCompleted = (title: string) => {
+		return localCompletedIds.has(generateActionId(title));
+	};
 
 	// Get impact badge variant
 	const getImpactVariant = (
@@ -67,7 +141,8 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 	const filteredActions = useMemo(() => {
 		if (!data) return [];
 		return data.dashboard.fullActionPlan.filter((action) => {
-			if (selectedCategory && action.category !== selectedCategory) return false;
+			if (selectedCategory && action.category !== selectedCategory)
+				return false;
 			if (selectedImpact && action.impact !== selectedImpact) return false;
 			if (selectedCost && action.cost !== selectedCost) return false;
 			return true;
@@ -117,7 +192,7 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 	return (
 		<div className="flex min-h-screen bg-background">
 			{/* Sidebar */}
-			<aside className="w-72 border-r bg-card shadow-sm">
+			<aside className="fixed top-0 left-0 h-screen w-72 border-r bg-card shadow-sm">
 				<div className="flex h-full flex-col">
 					{/* Logo/Header */}
 					<div className="border-b bg-gradient-to-br from-primary/10 to-primary/5 p-6">
@@ -135,7 +210,7 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 					</div>
 
 					{/* Navigation */}
-					<nav className="flex-1 space-y-1 p-4">
+					<nav className="flex-1 space-y-1 overflow-y-auto p-4">
 						<a
 							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
 							href="/dashboard"
@@ -156,13 +231,6 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 						>
 							<Target className="size-5 stroke-current" />
 							<span className="font-medium">Action Plan</span>
-						</a>
-						<a
-							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-							href="/dashboard/analytics"
-						>
-							<BarChart3 className="size-5 stroke-current" />
-							<span>Analytics</span>
 						</a>
 						<a
 							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
@@ -187,7 +255,7 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 			</aside>
 
 			{/* Main Content */}
-			<main className="flex-1 overflow-auto">
+			<main className="ml-72 flex-1 overflow-auto">
 				<div className="@container/main flex flex-1 flex-col">
 					<div className="flex flex-col gap-6 p-6 lg:p-8">
 						{/* Header */}
@@ -244,7 +312,9 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 														)
 													}
 													variant={
-														selectedCategory === category ? "default" : "outline"
+														selectedCategory === category
+															? "default"
+															: "outline"
 													}
 												>
 													{category}
@@ -295,7 +365,9 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 													onClick={() =>
 														setSelectedCost(selectedCost === cost ? null : cost)
 													}
-													variant={selectedCost === cost ? "default" : "outline"}
+													variant={
+														selectedCost === cost ? "default" : "outline"
+													}
 												>
 													{cost}
 												</Badge>
@@ -341,50 +413,72 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 										</Button>
 									</div>
 								) : (
-									<div className="space-y-4">
+									<div className="space-y-3">
 										{filteredActions.map(
-										(
-											action: EcoPilotDashboard["fullActionPlan"][number],
-											index: number,
-										) => (
-											<div
-												className="group rounded-lg border border-l-4 border-l-primary bg-card p-5 transition-all hover:shadow-md"
-												key={action.title}
-											>
-												<div className="space-y-3">
-													<div className="flex items-start justify-between gap-4">
-														<div className="flex-1 space-y-2">
-															<div className="flex items-center gap-2">
-																<Badge className="text-xs" variant="outline">
-																	{action.category}
-																</Badge>
-																<span className="text-muted-foreground text-xs">
-																	Action {index + 1}
-																</span>
+											(
+												action: EcoPilotDashboard["fullActionPlan"][number],
+												index: number,
+											) => {
+												const isCompleted = isActionCompleted(action.title);
+												return (
+													<div
+														className={`group flex items-start gap-4 rounded-lg border bg-card p-5 transition-all hover:border-primary hover:shadow-md ${
+															isCompleted ? "opacity-60" : ""
+														}`}
+														key={action.title}
+													>
+														<Checkbox
+															checked={isCompleted}
+															className="mt-1 size-5"
+															onCheckedChange={() =>
+																handleToggleAction(action.title)
+															}
+														/>
+														<div className="flex items-center justify-center rounded-full bg-muted px-2.5 py-0.5">
+															<span className="font-semibold text-muted-foreground text-xs">
+																{index + 1}
+															</span>
+														</div>
+														<div className="flex-1 space-y-3">
+															<div className="space-y-2">
+																<div className="flex items-center gap-2">
+																	<Badge className="text-xs" variant="outline">
+																		{action.category}
+																	</Badge>
+																	<Badge
+																		className="text-xs"
+																		variant={getImpactVariant(action.impact)}
+																	>
+																		{action.impact}
+																	</Badge>
+																	<Badge className="text-xs" variant="outline">
+																		{action.cost}
+																	</Badge>
+																</div>
+																<h4
+																	className={`font-semibold text-lg leading-tight transition-all ${
+																		isCompleted
+																			? "text-muted-foreground line-through"
+																			: "group-hover:text-primary"
+																	}`}
+																>
+																	{action.title}
+																</h4>
+																<p className="text-muted-foreground text-sm leading-relaxed">
+																	{action.description}
+																</p>
 															</div>
-															<h4 className="font-semibold text-lg leading-tight group-hover:text-primary">
-																{action.title}
-															</h4>
-															<p className="text-muted-foreground text-sm leading-relaxed">
-																{action.description}
-															</p>
+															<div className="flex flex-wrap gap-2 border-t pt-3">
+																<div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+																	<span className="font-medium">Payback:</span>
+																	<span>{action.paybackPeriod}</span>
+																</div>
+															</div>
 														</div>
 													</div>
-													<div className="flex flex-wrap gap-2">
-														<Badge
-															className="text-xs"
-															variant={getImpactVariant(action.impact)}
-														>
-															Impact: {action.impact}
-														</Badge>
-														<Badge className="text-xs" variant="outline">
-															Cost: {action.cost}
-														</Badge>
-													</div>
-												</div>
-											</div>
-										),
-									)}
+												);
+											},
+										)}
 									</div>
 								)}
 							</CardContent>
@@ -399,7 +493,7 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 function ActionPlanSkeleton() {
 	return (
 		<div className="flex min-h-screen bg-background">
-			<aside className="w-72 border-r bg-card shadow-sm">
+			<aside className="fixed top-0 left-0 h-screen w-72 border-r bg-card shadow-sm">
 				<div className="flex h-full flex-col">
 					<div className="border-b bg-gradient-to-br from-primary/10 to-primary/5 p-6">
 						<div className="flex items-center gap-3">
@@ -410,12 +504,10 @@ function ActionPlanSkeleton() {
 							</div>
 						</div>
 					</div>
-					<div className="flex-1 space-y-2 p-4">
-						{["home", "footprint", "actions", "analytics", "settings"].map(
-							(item) => (
-								<Skeleton className="h-12 w-full rounded-lg" key={item} />
-							),
-						)}
+					<div className="flex-1 space-y-2 overflow-y-auto p-4">
+						{["home", "footprint", "actions", "settings"].map((item) => (
+							<Skeleton className="h-12 w-full rounded-lg" key={item} />
+						))}
 					</div>
 					<div className="border-t bg-muted/30 p-4">
 						<div className="flex items-center gap-3">
@@ -428,7 +520,7 @@ function ActionPlanSkeleton() {
 					</div>
 				</div>
 			</aside>
-			<main className="flex-1 overflow-auto p-8">
+			<main className="ml-72 flex-1 overflow-auto p-8">
 				<div className="space-y-6">
 					<div className="flex items-center gap-3">
 						<Skeleton className="size-14 rounded-lg" />
@@ -443,4 +535,3 @@ function ActionPlanSkeleton() {
 		</div>
 	);
 }
-

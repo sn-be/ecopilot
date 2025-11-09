@@ -102,3 +102,21 @@ export const dashboards = createTable(
 	}),
 	(t) => [index("dashboard_userId_idx").on(t.userId)],
 );
+
+export const completedActions = createTable(
+	"completed_action",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		actionId: d.text({ length: 512 }).notNull(), // Unique identifier for the action (hash of title)
+		actionType: d.text({ length: 50 }).notNull(), // 'priority', 'quickwin', or 'actionplan'
+		completedAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+	}),
+	(t) => [
+		index("completed_action_userId_idx").on(t.userId),
+		index("completed_action_actionId_idx").on(t.actionId),
+	],
+);
