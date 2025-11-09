@@ -25,3 +25,121 @@ export const posts = createTable(
 	}),
 	(t) => [index("name_idx").on(t.name)],
 );
+
+export const onboardingData = createTable(
+	"onboarding_data",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull().unique(),
+		// Step 1: Business Information
+		businessName: d.text({ length: 256 }),
+		industry: d.text({ length: 256 }),
+		country: d.text({ length: 256 }),
+		postalCode: d.text({ length: 50 }),
+		// Step 2: Team & Space
+		numberOfEmployees: d.integer(),
+		locationSize: d.real(), // in sq. ft.
+		locationUnit: d.text({ length: 10 }), // 'sqft' or 'sqm'
+		ownOrRent: d.text({ length: 10 }), // 'own' or 'rent'
+		// Step 3: Energy Use
+		monthlyElectricityKwh: d.real(),
+		monthlyElectricityAmount: d.real(), // $ fallback
+		electricityCurrency: d.text({ length: 10 }),
+		heatingFuel: d.text({ length: 50 }),
+		monthlyHeatingAmount: d.real(),
+		heatingUnit: d.text({ length: 20 }), // 'therms', 'gallons', etc.
+		energyDataSkipped: d.integer({ mode: "boolean" }).default(false),
+		// Step 4: Operations
+		hasVehicles: d.integer({ mode: "boolean" }),
+		numberOfVehicles: d.integer(),
+		employeeCommutePattern: d.text({ length: 50 }),
+		businessFlightsPerYear: d.integer(),
+		weeklyTrashBags: d.integer(),
+		// Tracking
+		currentStep: d.integer().default(1).notNull(),
+		completedAt: d.integer({ mode: "timestamp" }),
+		createdAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+		updatedAt: d.integer({ mode: "timestamp" }).$onUpdate(() => new Date()),
+	}),
+	(t) => [index("userId_idx").on(t.userId)],
+);
+
+export const carbonFootprints = createTable(
+	"carbon_footprint",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		totalKgCO2eAnnual: d.real().notNull(),
+		dataSource: d.text(),
+		breakdown: d.text({ mode: "json" }).notNull(), // JSON array
+		calculationNotes: d.text(),
+		recommendations: d.text({ mode: "json" }), // JSON array
+		createdAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+	}),
+	(t) => [index("footprint_userId_idx").on(t.userId)],
+);
+
+export const dashboards = createTable(
+	"dashboard",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		footprintId: d.integer().notNull(),
+		executiveSummary: d.text().notNull(),
+		prioritizedNextStep: d.text({ mode: "json" }).notNull(), // JSON object
+		quickWins: d.text({ mode: "json" }).notNull(), // JSON array
+		fullActionPlan: d.text({ mode: "json" }).notNull(), // JSON array
+		createdAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+	}),
+	(t) => [index("dashboard_userId_idx").on(t.userId)],
+);
+
+export const completedActions = createTable(
+	"completed_action",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		actionId: d.text({ length: 512 }).notNull(), // Unique identifier for the action (hash of title)
+		actionType: d.text({ length: 50 }).notNull(), // 'priority', 'quickwin', or 'actionplan'
+		completedAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+	}),
+	(t) => [
+		index("completed_action_userId_idx").on(t.userId),
+		index("completed_action_actionId_idx").on(t.actionId),
+	],
+);
+
+export const cedaSpendingEntries = createTable(
+	"ceda_spending_entry",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		category: d.text({ length: 512 }).notNull(), // CEDA category (e.g., "Marketing Consultants")
+		spendAmount: d.real().notNull(), // Amount spent in USD
+		emissionFactor: d.real().notNull(), // kg CO2e per USD
+		totalEmissions: d.real().notNull(), // Total kg CO2e calculated
+		country: d.text({ length: 256 }).notNull(), // Country used for calculation
+		description: d.text({ length: 1024 }), // Optional user description
+		createdAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+		updatedAt: d.integer({ mode: "timestamp" }).$onUpdate(() => new Date()),
+	}),
+	(t) => [
+		index("ceda_spending_userId_idx").on(t.userId),
+		index("ceda_spending_createdAt_idx").on(t.createdAt),
+	],
+);

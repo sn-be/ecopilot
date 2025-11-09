@@ -4,9 +4,10 @@ import { env } from "@/env";
 
 export default {
 	schema: "./src/server/db/schema.ts",
-	dialect: "sqlite",
+	dialect: "turso",
 	dbCredentials: {
-		url: env.DATABASE_URL,
+		url: env.TURSO_DATABASE_URL,
+		authToken: env.TURSO_DATABASE_AUTH_TOKEN,
 	},
 	tablesFilter: ["ecopilot_*"],
 } satisfies Config;
