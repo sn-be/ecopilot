@@ -1,17 +1,24 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { OnboardingFlow } from "./onboarding-flow";
 import { Dashboard } from "./dashboard";
+import { OnboardingFlow } from "./onboarding-flow";
+import { Spinner } from "./ui/spinner";
 
 export function OnboardingGate() {
 	const { user, isLoaded } = useUser();
 
 	if (!isLoaded) {
-		return <div>Loading...</div>;
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<Spinner className="size-8" />
+			</div>
+		);
 	}
 
-	const onboardingComplete = user?.publicMetadata?.onboardingComplete === true;
+	// Check if onboarding is complete
+	const onboardingComplete =
+		user?.unsafeMetadata?.onboardingComplete === true;
 
 	if (onboardingComplete) {
 		return <Dashboard />;
@@ -19,4 +26,3 @@ export function OnboardingGate() {
 
 	return <OnboardingFlow />;
 }
-
