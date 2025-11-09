@@ -29,9 +29,9 @@ EcoPilot is an AI-powered sustainability platform that helps businesses measure,
 - ROI calculations and payback periods
 
 ### 🌍 CEDA Integration
-- Access to UK government emission factors
-- Up-to-date carbon intensity data
-- Accurate calculations for UK businesses
+- Access to emission factors based on dollar amount spent in an industry
+- Up-to-date carbon emission data
+- Accurate calculations based on Open CEDA integration.
 
 ### ⚙️ Business Onboarding
 - Guided setup flow
