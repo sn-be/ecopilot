@@ -1,4 +1,5 @@
-import { SignedIn, SignedOut, SignIn, UserProfile, SignOutButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
+import { OnboardingGate } from "@/components/onboarding-gate";
 
 export default function Home() {
 	return (
@@ -7,11 +8,7 @@ export default function Home() {
 				<SignIn routing="hash" />
 			</SignedOut>
 			<SignedIn>
-				<div className="flex flex-col items-center justify-center gap-8">
-					<h1 className="font-bold text-4xl">Authenticated</h1>
-					<UserProfile routing="hash" />
-					<SignOutButton />
-				</div>
+				<OnboardingGate />
 			</SignedIn>
 		</main>
 	);
