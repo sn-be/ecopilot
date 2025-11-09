@@ -7,20 +7,20 @@ import {
 	carbonFootprintSchema,
 	type EcoPilotDashboard,
 	ecoPilotDashboardSchema,
+	energyActionsSchema,
 	executiveSummarySchema,
+	otherActionsSchema,
 	priorityActionSchema,
 	quickWinsSchema,
-	energyActionsSchema,
 	transportActionsSchema,
-	otherActionsSchema,
 } from "@/lib/ai-schemas";
 import { getGPT4oModel } from "@/lib/azure-openai";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import {
-	onboardingData,
 	carbonFootprints,
-	dashboards,
 	completedActions,
+	dashboards,
+	onboardingData,
 } from "@/server/db/schema";
 
 export const footprintRouter = createTRPCRouter({
@@ -320,20 +320,20 @@ Your task is to calculate an accurate annual carbon footprint (in kg CO2e) based
 - Percentages must sum to 100%
 - Include detailed notes about data quality and assumptions`;
 
-				const userPrompt = `Calculate the carbon footprint for this business:
+					const userPrompt = `Calculate the carbon footprint for this business:
 
 ${JSON.stringify(businessData, null, 2)}
 
 Provide a detailed, accurate calculation with clear methodology notes.`;
 
-				const result = await generateObject({
-					model: getGPT4oModel(),
-					schema: carbonFootprintSchema,
-					system: systemPrompt,
-					prompt: userPrompt,
-				});
+					const result = await generateObject({
+						model: getGPT4oModel(),
+						schema: carbonFootprintSchema,
+						system: systemPrompt,
+						prompt: userPrompt,
+					});
 
-				return result.object;
+					return result.object;
 				});
 
 			// Then generate the dashboard in multiple focused steps
@@ -362,7 +362,7 @@ Provide a detailed, accurate calculation with clear methodology notes.`;
 				},
 			};
 
-		const baseSystemPrompt = `You are "EcoPilot", a world-class sustainability consultant for small and medium-sized businesses.
+			const baseSystemPrompt = `You are "EcoPilot", a world-class sustainability consultant for small and medium-sized businesses.
 
 You are expert, encouraging, and focused on practical, cost-effective solutions.
 
@@ -379,56 +379,56 @@ You are expert, encouraging, and focused on practical, cost-effective solutions.
 - Do NOT include "type", "properties", or schema metadata in your response
 - Return the actual data values directly`;
 
-		// Helper function to handle AI calls
-		async function generateWithSchema<T>(
-			schema: z.ZodType<T>,
-			prompt: string,
-		) {
-			const result = await generateObject({
-				model: getGPT4oModel(),
-				schema,
-				system: baseSystemPrompt,
-				prompt,
-			});
+			// Helper function to handle AI calls
+			async function generateWithSchema<T>(
+				schema: z.ZodType<T>,
+				prompt: string,
+			) {
+				const result = await generateObject({
+					model: getGPT4oModel(),
+					schema,
+					system: baseSystemPrompt,
+					prompt,
+				});
 
-			return result;
-		}
+				return result;
+			}
 
-		// Run all 6 AI calls in parallel for better performance
-		const [
-			summaryResult,
-			priorityResult,
-			quickWinsResult,
-			energyActionsResult,
-			transportActionsResult,
-			otherActionsResult,
-		] = await Promise.all([
-			// Step 1: Executive Summary (fast, simple)
-			generateWithSchema(
-				executiveSummarySchema,
-				`Generate an encouraging executive summary for this business:
+			// Run all 6 AI calls in parallel for better performance
+			const [
+				summaryResult,
+				priorityResult,
+				quickWinsResult,
+				energyActionsResult,
+				transportActionsResult,
+				otherActionsResult,
+			] = await Promise.all([
+				// Step 1: Executive Summary (fast, simple)
+				generateWithSchema(
+					executiveSummarySchema,
+					`Generate an encouraging executive summary for this business:
 
 ${JSON.stringify(businessContext, null, 2)}
 
 Be specific with numbers and realistic about opportunities.`,
-			),
+				),
 
-			// Step 2: Priority Action (focused on #1 recommendation)
-			generateWithSchema(
-				priorityActionSchema,
-				`Identify the single most impactful action for this business:
+				// Step 2: Priority Action (focused on #1 recommendation)
+				generateWithSchema(
+					priorityActionSchema,
+					`Identify the single most impactful action for this business:
 
 ${JSON.stringify(businessContext, null, 2)}
 
 Target the largest emission source (${footprint.breakdown[0]?.category ?? "unknown"}: ${footprint.breakdown[0]?.percent.toFixed(1)}% of emissions).
 Consider their constraints (owns or rents: ${userData.ownOrRent}).
 Provide specific, actionable guidance.`,
-			),
+				),
 
-			// Step 3: Quick Wins (3-5 low-cost actions)
-			generateWithSchema(
-				quickWinsSchema,
-				`Generate 3-5 quick wins for this business:
+				// Step 3: Quick Wins (3-5 low-cost actions)
+				generateWithSchema(
+					quickWinsSchema,
+					`Generate 3-5 quick wins for this business:
 
 ${JSON.stringify(businessContext, null, 2)}
 
@@ -437,12 +437,12 @@ Focus on:
 - Quick implementation (1-3 months)
 - High impact relative to cost
 - Specific to their industry (${userData.industry})`,
-			),
+				),
 
-			// Step 4a: Energy Actions (2-4 items)
-			generateWithSchema(
-				energyActionsSchema,
-				`Generate 2-4 energy-related actions for this business:
+				// Step 4a: Energy Actions (2-4 items)
+				generateWithSchema(
+					energyActionsSchema,
+					`Generate 2-4 energy-related actions for this business:
 
 Business: ${userData.industry}, ${userData.numberOfEmployees} employees
 Largest emission source: ${footprint.breakdown[0]?.category} (${footprint.breakdown[0]?.percent.toFixed(1)}%)
@@ -450,31 +450,31 @@ Owns or rents: ${userData.ownOrRent}
 
 Focus on energy efficiency and renewable energy.
 ${userData.ownOrRent === "rent" ? "IMPORTANT: Do NOT recommend building modifications (solar, insulation, HVAC)." : ""}`,
-			),
+				),
 
-			// Step 4b: Transport Actions (1-3 items)
-			generateWithSchema(
-				transportActionsSchema,
-				`Generate 1-3 transportation-related actions for this business:
+				// Step 4b: Transport Actions (1-3 items)
+				generateWithSchema(
+					transportActionsSchema,
+					`Generate 1-3 transportation-related actions for this business:
 
 Business: ${userData.industry}, ${userData.numberOfEmployees} employees
 Employee commute pattern: ${userData.employeeCommutePattern}
 Business flights per year: ${userData.businessFlightsPerYear}
 
 Focus on commuting, business travel, and fleet management.`,
-			),
+				),
 
-			// Step 4c: Other Actions (1-3 items)
-			generateWithSchema(
-				otherActionsSchema,
-				`Generate 1-3 actions for waste, supply chain, or team engagement:
+				// Step 4c: Other Actions (1-3 items)
+				generateWithSchema(
+					otherActionsSchema,
+					`Generate 1-3 actions for waste, supply chain, or team engagement:
 
 Business: ${userData.industry}, ${userData.numberOfEmployees} employees
 Weekly trash bags: ${userData.weeklyTrashBags}
 
 Focus on waste reduction, sustainable procurement, or employee engagement.`,
-			),
-		]);
+				),
+			]);
 
 			// Merge all results into final dashboard
 			const fullActionPlan = [
@@ -492,20 +492,20 @@ Focus on waste reduction, sustainable procurement, or employee engagement.`,
 				})),
 			];
 
-		const dashboard: EcoPilotDashboard = {
-			executiveSummary: summaryResult.object.executiveSummary,
-			prioritizedNextStep: {
-				title: priorityResult.object.title,
-				description: priorityResult.object.description,
-				impact: priorityResult.object.impact,
-				cost: priorityResult.object.cost,
-				paybackPeriod: priorityResult.object.paybackPeriod,
-			},
-			quickWins: quickWinsResult.object.quickWins,
-			fullActionPlan,
-		};
+			const dashboard: EcoPilotDashboard = {
+				executiveSummary: summaryResult.object.executiveSummary,
+				prioritizedNextStep: {
+					title: priorityResult.object.title,
+					description: priorityResult.object.description,
+					impact: priorityResult.object.impact,
+					cost: priorityResult.object.cost,
+					paybackPeriod: priorityResult.object.paybackPeriod,
+				},
+				quickWins: quickWinsResult.object.quickWins,
+				fullActionPlan,
+			};
 
-		// Save footprint to database
+			// Save footprint to database
 			const [savedFootprint] = await ctx.db
 				.insert(carbonFootprints)
 				.values({
@@ -529,13 +529,13 @@ Focus on waste reduction, sustainable procurement, or employee engagement.`,
 					prioritizedNextStep: JSON.stringify(dashboard.prioritizedNextStep),
 					quickWins: JSON.stringify(dashboard.quickWins),
 					fullActionPlan: JSON.stringify(dashboard.fullActionPlan),
-			});
-		}
+				});
+			}
 
-		return {
-			footprint,
-			dashboard,
-		};
+			return {
+				footprint,
+				dashboard,
+			};
 		}),
 
 	/**
@@ -565,6 +565,11 @@ Focus on waste reduction, sustainable procurement, or employee engagement.`,
 				return null;
 			}
 
+			// Get onboarding data for business name
+			const onboarding = await ctx.db.query.onboardingData.findFirst({
+				where: eq(onboardingData.userId, input.userId),
+			});
+
 			// Get completed actions for this user
 			const completed = await ctx.db.query.completedActions.findMany({
 				where: eq(completedActions.userId, input.userId),
@@ -588,6 +593,7 @@ Focus on waste reduction, sustainable procurement, or employee engagement.`,
 					quickWins: JSON.parse(dashboard.quickWins as string),
 					fullActionPlan: JSON.parse(dashboard.fullActionPlan as string),
 				},
+				businessName: onboarding?.businessName ?? null,
 				completedActionIds: Array.from(completedActionIds),
 			};
 		}),

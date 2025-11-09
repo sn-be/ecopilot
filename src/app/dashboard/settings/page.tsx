@@ -11,4 +11,3 @@ export default async function Settings() {
 
 	return <SettingsPage userId={user.id} />;
 }
-

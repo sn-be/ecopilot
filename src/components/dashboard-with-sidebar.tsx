@@ -18,6 +18,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, Label, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { EcoChatWidget } from "@/components/eco-chat-widget";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -130,6 +131,34 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 	const totalEmissions = useMemo(() => {
 		return data?.footprint.totalKgCO2eAnnual ?? 0;
 	}, [data?.footprint.totalKgCO2eAnnual]);
+
+	// Find the largest emission source by percentage
+	const largestEmissionSource = useMemo(() => {
+		if (!data?.footprint.breakdown || data.footprint.breakdown.length === 0) {
+			return null;
+		}
+		return data.footprint.breakdown.reduce(
+			(
+				max: { category: string; kgCO2e: number; percent: number },
+				current: { category: string; kgCO2e: number; percent: number },
+			) => {
+				return current.percent > max.percent ? current : max;
+			},
+		);
+	}, [data?.footprint.breakdown]);
+
+	// Prepare business context for chat widget
+	const chatBusinessContext = useMemo(() => {
+		if (!data) return undefined;
+		return {
+			industry: largestEmissionSource?.category,
+			employeeCount: undefined, // Could be fetched from user data if needed
+			totalEmissions: data.footprint.totalKgCO2eAnnual,
+			breakdown: data.footprint.breakdown,
+			topEmissionSource: largestEmissionSource?.category,
+			recommendations: data.footprint.recommendations,
+		};
+	}, [data, largestEmissionSource]);
 
 	// Prepare action plan impact chart data
 	const actionImpactData = useMemo(() => {
@@ -251,6 +280,9 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 
 	return (
 		<div className="flex min-h-screen bg-background">
+			{/* Chat Widget */}
+			<EcoChatWidget businessContext={chatBusinessContext} userId={userId} />
+
 			{/* Sidebar */}
 			<aside className="fixed top-0 left-0 h-screen w-72 border-r bg-card shadow-sm">
 				<div className="flex h-full flex-col">
@@ -260,10 +292,10 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 							<div className="rounded-lg bg-primary p-2">
 								<Leaf className="size-6 stroke-current text-primary-foreground" />
 							</div>
-							<div>
+							<div className="min-w-0 flex-1">
 								<h1 className="font-bold text-xl">EcoPilot</h1>
-								<p className="text-muted-foreground text-xs">
-									Sustainability Dashboard
+								<p className="truncate text-muted-foreground text-xs">
+									{data.businessName ?? "Sustainability Dashboard"}
 								</p>
 							</div>
 						</div>
@@ -331,7 +363,16 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 												Executive Summary
 											</CardTitle>
 											<p className="mt-1 text-muted-foreground text-sm">
-												AI-Generated Insights
+												{data.businessName ? (
+													<>
+														Company Name:{" "}
+														<span className="font-medium text-foreground">
+															{data.businessName}
+														</span>
+													</>
+												) : (
+													"AI-Generated Insights"
+												)}
 											</p>
 										</div>
 										<Badge
@@ -389,7 +430,7 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 								<CardHeader className="relative">
 									<CardDescription>Largest Source</CardDescription>
 									<CardTitle className="font-semibold @[250px]/card:text-3xl text-2xl">
-										{data.footprint.breakdown[0]?.category}
+										{largestEmissionSource?.category ?? "N/A"}
 									</CardTitle>
 									<div className="absolute top-4 right-4">
 										<Badge
@@ -398,11 +439,11 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 										>
 											{(() => {
 												const Icon = getCategoryIcon(
-													data.footprint.breakdown[0]?.category ?? "",
+													largestEmissionSource?.category ?? "",
 												);
 												return <Icon className="size-3" />;
 											})()}
-											{data.footprint.breakdown[0]?.percent.toFixed(0)}%
+											{largestEmissionSource?.percent.toFixed(0) ?? 0}%
 										</Badge>
 									</div>
 								</CardHeader>
@@ -411,7 +452,7 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 										Primary emission source <TrendingUp className="size-4" />
 									</div>
 									<div className="text-muted-foreground">
-										{data.footprint.breakdown[0]?.kgCO2e.toLocaleString()} kg
+										{largestEmissionSource?.kgCO2e.toLocaleString() ?? 0} kg
 										CO2e annually
 									</div>
 								</CardFooter>

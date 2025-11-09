@@ -11,4 +11,3 @@ export default async function ActionsPage() {
 
 	return <ActionPlanPage userId={userId} />;
 }
-

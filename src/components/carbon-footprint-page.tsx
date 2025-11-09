@@ -134,7 +134,10 @@ export function CarbonFootprintPage({ userId }: CarbonFootprintPageProps) {
 
 	// Prepare bar chart data
 	const barChartData = data.footprint.breakdown.map(
-		(item: { category: string; kgCO2e: number; percent: number }, index: number) => ({
+		(
+			item: { category: string; kgCO2e: number; percent: number },
+			index: number,
+		) => ({
 			category: item.category,
 			emissions: item.kgCO2e,
 			percent: item.percent,
@@ -164,7 +167,7 @@ export function CarbonFootprintPage({ userId }: CarbonFootprintPageProps) {
 	return (
 		<div className="flex min-h-screen bg-background">
 			{/* Sidebar */}
-			<aside className="fixed left-0 top-0 h-screen w-72 border-r bg-card shadow-sm">
+			<aside className="fixed top-0 left-0 h-screen w-72 border-r bg-card shadow-sm">
 				<div className="flex h-full flex-col">
 					{/* Logo/Header */}
 					<div className="border-b bg-gradient-to-br from-primary/10 to-primary/5 p-6">
@@ -418,11 +421,7 @@ export function CarbonFootprintPage({ userId }: CarbonFootprintPageProps) {
 													content={<ChartTooltipContent hideLabel />}
 													cursor={false}
 												/>
-												<Bar
-													dataKey="emissions"
-													layout="vertical"
-													radius={5}
-												/>
+												<Bar dataKey="emissions" layout="vertical" radius={5} />
 											</BarChart>
 										</ChartContainer>
 									</CardContent>
@@ -584,7 +583,7 @@ export function CarbonFootprintPage({ userId }: CarbonFootprintPageProps) {
 function CarbonFootprintSkeleton() {
 	return (
 		<div className="flex min-h-screen bg-background">
-			<aside className="fixed left-0 top-0 h-screen w-72 border-r bg-card shadow-sm">
+			<aside className="fixed top-0 left-0 h-screen w-72 border-r bg-card shadow-sm">
 				<div className="flex h-full flex-col">
 					<div className="border-b bg-gradient-to-br from-primary/10 to-primary/5 p-6">
 						<div className="flex items-center gap-3">
@@ -629,4 +628,3 @@ function CarbonFootprintSkeleton() {
 		</div>
 	);
 }
-

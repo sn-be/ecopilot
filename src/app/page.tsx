@@ -11,7 +11,7 @@ export default async function Home() {
 	if (userId) {
 		try {
 			const latestData = await api.footprint.getLatest({ userId });
-			
+
 			// If they have a dashboard with action plan, redirect to dashboard
 			if (latestData?.dashboard) {
 				redirect("/dashboard");

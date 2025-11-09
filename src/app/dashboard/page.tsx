@@ -11,4 +11,3 @@ export default async function DashboardPage() {
 
 	return <DashboardWithSidebar userId={userId} />;
 }
-

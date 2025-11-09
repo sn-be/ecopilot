@@ -141,11 +141,17 @@ export const executiveSummarySchema = z.object({
 
 // Step 2: Priority Action (simplified - no nested object)
 export const priorityActionSchema = z.object({
-	title: z.string().describe("Clear, actionable title for the #1 recommended action"),
+	title: z
+		.string()
+		.describe("Clear, actionable title for the #1 recommended action"),
 	description: z.string().describe("Detailed explanation (2-3 sentences)"),
-	impact: z.enum(["High", "Medium", "Low"]).describe("Expected carbon reduction impact"),
+	impact: z
+		.enum(["High", "Medium", "Low"])
+		.describe("Expected carbon reduction impact"),
 	cost: z.enum(["$", "$$", "$$$"]).describe("Implementation cost"),
-	paybackPeriod: z.string().describe("Estimated payback period (e.g., '1.5 years', 'Immediate')"),
+	paybackPeriod: z
+		.string()
+		.describe("Estimated payback period (e.g., '1.5 years', 'Immediate')"),
 });
 
 // Step 3: Quick Wins

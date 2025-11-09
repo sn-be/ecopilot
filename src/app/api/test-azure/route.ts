@@ -1,5 +1,5 @@
-import { env } from "@/env";
 import { NextResponse } from "next/server";
+import { env } from "@/env";
 
 export async function GET() {
 	try {
@@ -55,4 +55,3 @@ export async function GET() {
 		);
 	}
 }
-

@@ -3,17 +3,18 @@
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Spinner } from "./ui/spinner";
-import { api } from "@/trpc/react";
 import { OnboardingFlow } from "@/components/onboarding-flow";
+import { api } from "@/trpc/react";
+import { Spinner } from "./ui/spinner";
 
 export function OnboardingGate() {
 	const { user, isLoaded } = useUser();
 	const router = useRouter();
-	const { data: latestData, isLoading: isLoadingData } = api.footprint.getLatest.useQuery(
-		{ userId: user?.id ?? "" },
-		{ enabled: !!user?.id && isLoaded }
-	);
+	const { data: latestData, isLoading: isLoadingData } =
+		api.footprint.getLatest.useQuery(
+			{ userId: user?.id ?? "" },
+			{ enabled: !!user?.id && isLoaded },
+		);
 
 	// Check if onboarding is complete
 	const onboardingComplete = user?.unsafeMetadata?.onboardingComplete === true;

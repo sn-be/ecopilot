@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +36,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/trpc/react";
-import { toast } from "sonner";
 
 interface SettingsPageProps {
 	userId: string;
@@ -299,7 +299,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Agriculture & Farming">
 														Agriculture & Farming
 													</SelectItem>
-													<SelectItem value="Construction">Construction</SelectItem>
+													<SelectItem value="Construction">
+														Construction
+													</SelectItem>
 													<SelectItem value="Education">Education</SelectItem>
 													<SelectItem value="Energy & Utilities">
 														Energy & Utilities
@@ -317,7 +319,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Manufacturing">
 														Manufacturing
 													</SelectItem>
-													<SelectItem value="Real Estate">Real Estate</SelectItem>
+													<SelectItem value="Real Estate">
+														Real Estate
+													</SelectItem>
 													<SelectItem value="Retail">Retail</SelectItem>
 													<SelectItem value="Technology">Technology</SelectItem>
 													<SelectItem value="Transportation & Logistics">
@@ -336,7 +340,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectValue placeholder="Select country" />
 												</SelectTrigger>
 												<SelectContent>
-													<SelectItem value="Afghanistan">Afghanistan</SelectItem>
+													<SelectItem value="Afghanistan">
+														Afghanistan
+													</SelectItem>
 													<SelectItem value="Albania">Albania</SelectItem>
 													<SelectItem value="Algeria">Algeria</SelectItem>
 													<SelectItem value="Andorra">Andorra</SelectItem>
@@ -363,7 +369,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Brazil">Brazil</SelectItem>
 													<SelectItem value="Brunei">Brunei</SelectItem>
 													<SelectItem value="Bulgaria">Bulgaria</SelectItem>
-													<SelectItem value="Burkina Faso">Burkina Faso</SelectItem>
+													<SelectItem value="Burkina Faso">
+														Burkina Faso
+													</SelectItem>
 													<SelectItem value="Burundi">Burundi</SelectItem>
 													<SelectItem value="Cambodia">Cambodia</SelectItem>
 													<SelectItem value="Cameroon">Cameroon</SelectItem>
@@ -394,7 +402,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="East Timor">East Timor</SelectItem>
 													<SelectItem value="Ecuador">Ecuador</SelectItem>
 													<SelectItem value="Egypt">Egypt</SelectItem>
-													<SelectItem value="El Salvador">El Salvador</SelectItem>
+													<SelectItem value="El Salvador">
+														El Salvador
+													</SelectItem>
 													<SelectItem value="Equatorial Guinea">
 														Equatorial Guinea
 													</SelectItem>
@@ -413,7 +423,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Grenada">Grenada</SelectItem>
 													<SelectItem value="Guatemala">Guatemala</SelectItem>
 													<SelectItem value="Guinea">Guinea</SelectItem>
-													<SelectItem value="Guinea-Bissau">Guinea-Bissau</SelectItem>
+													<SelectItem value="Guinea-Bissau">
+														Guinea-Bissau
+													</SelectItem>
 													<SelectItem value="Guyana">Guyana</SelectItem>
 													<SelectItem value="Haiti">Haiti</SelectItem>
 													<SelectItem value="Honduras">Honduras</SelectItem>
@@ -432,8 +444,12 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Kazakhstan">Kazakhstan</SelectItem>
 													<SelectItem value="Kenya">Kenya</SelectItem>
 													<SelectItem value="Kiribati">Kiribati</SelectItem>
-													<SelectItem value="North Korea">North Korea</SelectItem>
-													<SelectItem value="South Korea">South Korea</SelectItem>
+													<SelectItem value="North Korea">
+														North Korea
+													</SelectItem>
+													<SelectItem value="South Korea">
+														South Korea
+													</SelectItem>
 													<SelectItem value="Kuwait">Kuwait</SelectItem>
 													<SelectItem value="Kyrgyzstan">Kyrgyzstan</SelectItem>
 													<SelectItem value="Laos">Laos</SelectItem>
@@ -442,7 +458,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Lesotho">Lesotho</SelectItem>
 													<SelectItem value="Liberia">Liberia</SelectItem>
 													<SelectItem value="Libya">Libya</SelectItem>
-													<SelectItem value="Liechtenstein">Liechtenstein</SelectItem>
+													<SelectItem value="Liechtenstein">
+														Liechtenstein
+													</SelectItem>
 													<SelectItem value="Lithuania">Lithuania</SelectItem>
 													<SelectItem value="Luxembourg">Luxembourg</SelectItem>
 													<SelectItem value="Madagascar">Madagascar</SelectItem>
@@ -468,8 +486,12 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Namibia">Namibia</SelectItem>
 													<SelectItem value="Nauru">Nauru</SelectItem>
 													<SelectItem value="Nepal">Nepal</SelectItem>
-													<SelectItem value="Netherlands">Netherlands</SelectItem>
-													<SelectItem value="New Zealand">New Zealand</SelectItem>
+													<SelectItem value="Netherlands">
+														Netherlands
+													</SelectItem>
+													<SelectItem value="New Zealand">
+														New Zealand
+													</SelectItem>
 													<SelectItem value="Nicaragua">Nicaragua</SelectItem>
 													<SelectItem value="Niger">Niger</SelectItem>
 													<SelectItem value="Nigeria">Nigeria</SelectItem>
@@ -487,7 +509,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													</SelectItem>
 													<SelectItem value="Paraguay">Paraguay</SelectItem>
 													<SelectItem value="Peru">Peru</SelectItem>
-													<SelectItem value="Philippines">Philippines</SelectItem>
+													<SelectItem value="Philippines">
+														Philippines
+													</SelectItem>
 													<SelectItem value="Poland">Poland</SelectItem>
 													<SelectItem value="Portugal">Portugal</SelectItem>
 													<SelectItem value="Qatar">Qatar</SelectItem>
@@ -497,7 +521,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Saint Kitts and Nevis">
 														Saint Kitts and Nevis
 													</SelectItem>
-													<SelectItem value="Saint Lucia">Saint Lucia</SelectItem>
+													<SelectItem value="Saint Lucia">
+														Saint Lucia
+													</SelectItem>
 													<SelectItem value="Saint Vincent and the Grenadines">
 														Saint Vincent and the Grenadines
 													</SelectItem>
@@ -506,11 +532,15 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Sao Tome and Principe">
 														Sao Tome and Principe
 													</SelectItem>
-													<SelectItem value="Saudi Arabia">Saudi Arabia</SelectItem>
+													<SelectItem value="Saudi Arabia">
+														Saudi Arabia
+													</SelectItem>
 													<SelectItem value="Senegal">Senegal</SelectItem>
 													<SelectItem value="Serbia">Serbia</SelectItem>
 													<SelectItem value="Seychelles">Seychelles</SelectItem>
-													<SelectItem value="Sierra Leone">Sierra Leone</SelectItem>
+													<SelectItem value="Sierra Leone">
+														Sierra Leone
+													</SelectItem>
 													<SelectItem value="Singapore">Singapore</SelectItem>
 													<SelectItem value="Slovakia">Slovakia</SelectItem>
 													<SelectItem value="Slovenia">Slovenia</SelectItem>
@@ -518,14 +548,20 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 														Solomon Islands
 													</SelectItem>
 													<SelectItem value="Somalia">Somalia</SelectItem>
-													<SelectItem value="South Africa">South Africa</SelectItem>
-													<SelectItem value="South Sudan">South Sudan</SelectItem>
+													<SelectItem value="South Africa">
+														South Africa
+													</SelectItem>
+													<SelectItem value="South Sudan">
+														South Sudan
+													</SelectItem>
 													<SelectItem value="Spain">Spain</SelectItem>
 													<SelectItem value="Sri Lanka">Sri Lanka</SelectItem>
 													<SelectItem value="Sudan">Sudan</SelectItem>
 													<SelectItem value="Suriname">Suriname</SelectItem>
 													<SelectItem value="Sweden">Sweden</SelectItem>
-													<SelectItem value="Switzerland">Switzerland</SelectItem>
+													<SelectItem value="Switzerland">
+														Switzerland
+													</SelectItem>
 													<SelectItem value="Syria">Syria</SelectItem>
 													<SelectItem value="Taiwan">Taiwan</SelectItem>
 													<SelectItem value="Tajikistan">Tajikistan</SelectItem>
@@ -538,7 +574,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													</SelectItem>
 													<SelectItem value="Tunisia">Tunisia</SelectItem>
 													<SelectItem value="Turkey">Turkey</SelectItem>
-													<SelectItem value="Turkmenistan">Turkmenistan</SelectItem>
+													<SelectItem value="Turkmenistan">
+														Turkmenistan
+													</SelectItem>
 													<SelectItem value="Tuvalu">Tuvalu</SelectItem>
 													<SelectItem value="Uganda">Uganda</SelectItem>
 													<SelectItem value="Ukraine">Ukraine</SelectItem>
@@ -554,7 +592,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="Uruguay">Uruguay</SelectItem>
 													<SelectItem value="Uzbekistan">Uzbekistan</SelectItem>
 													<SelectItem value="Vanuatu">Vanuatu</SelectItem>
-													<SelectItem value="Vatican City">Vatican City</SelectItem>
+													<SelectItem value="Vatican City">
+														Vatican City
+													</SelectItem>
 													<SelectItem value="Venezuela">Venezuela</SelectItem>
 													<SelectItem value="Vietnam">Vietnam</SelectItem>
 													<SelectItem value="Yemen">Yemen</SelectItem>
@@ -730,10 +770,16 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectValue placeholder="Select fuel" />
 												</SelectTrigger>
 												<SelectContent>
-													<SelectItem value="none">No heating / Electric</SelectItem>
-													<SelectItem value="natural-gas">Natural Gas</SelectItem>
+													<SelectItem value="none">
+														No heating / Electric
+													</SelectItem>
+													<SelectItem value="natural-gas">
+														Natural Gas
+													</SelectItem>
 													<SelectItem value="propane">Propane</SelectItem>
-													<SelectItem value="heating-oil">Heating Oil</SelectItem>
+													<SelectItem value="heating-oil">
+														Heating Oil
+													</SelectItem>
 													<SelectItem value="wood">Wood</SelectItem>
 													<SelectItem value="other">Other</SelectItem>
 												</SelectContent>
@@ -822,7 +868,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 													<SelectItem value="mostly-remote">
 														Mostly Remote
 													</SelectItem>
-													<SelectItem value="drive-alone">Drive Alone</SelectItem>
+													<SelectItem value="drive-alone">
+														Drive Alone
+													</SelectItem>
 													<SelectItem value="carpool">Carpool</SelectItem>
 													<SelectItem value="public-transit">
 														Public Transit
@@ -849,9 +897,7 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 										</div>
 									</div>
 									<div className="space-y-2">
-										<Label htmlFor="weeklyTrashBags">
-											Weekly Trash Bags
-										</Label>
+										<Label htmlFor="weeklyTrashBags">Weekly Trash Bags</Label>
 										<Input
 											id="weeklyTrashBags"
 											min="0"
@@ -933,4 +979,3 @@ function SettingsSkeleton() {
 		</div>
 	);
 }
-

@@ -485,9 +485,9 @@ export function OnboardingFlow() {
 			// Calculate footprint and generate dashboard
 			toast.loading("Calculating your carbon footprint...");
 			await calculateFootprint.mutateAsync({ userId: user.id });
-			
+
 			toast.success("Your sustainability dashboard is ready!");
-			
+
 			// Redirect to dashboard
 			window.location.href = "/dashboard";
 		} catch (error) {

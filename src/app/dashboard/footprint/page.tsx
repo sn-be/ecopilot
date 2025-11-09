@@ -11,4 +11,3 @@ export default async function FootprintPage() {
 
 	return <CarbonFootprintPage userId={user.id} />;
 }
-
