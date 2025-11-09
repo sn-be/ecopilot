@@ -2,6 +2,7 @@
 
 import { UserButton } from "@clerk/nextjs";
 import {
+	Database,
 	Filter,
 	Home,
 	Leaf,
@@ -224,6 +225,13 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 						>
 							<TrendingDown className="size-5 stroke-current" />
 							<span>Carbon Footprint</span>
+						</a>
+						<a
+							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+							href="/dashboard/ceda"
+						>
+							<Database className="size-5 stroke-current" />
+							<span>CEDA</span>
 						</a>
 						<a
 							className="flex items-center gap-3 rounded-lg bg-primary px-4 py-3 text-primary-foreground shadow-sm transition-all hover:shadow-md"

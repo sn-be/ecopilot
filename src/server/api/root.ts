@@ -1,3 +1,4 @@
+import { cedaRouter } from "@/server/api/routers/ceda";
 import { footprintRouter } from "@/server/api/routers/footprint";
 import { onboardingRouter } from "@/server/api/routers/onboarding";
 import { postRouter } from "@/server/api/routers/post";
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
 	post: postRouter,
 	onboarding: onboardingRouter,
 	footprint: footprintRouter,
+	ceda: cedaRouter,
 });
 
 // export type definition of API

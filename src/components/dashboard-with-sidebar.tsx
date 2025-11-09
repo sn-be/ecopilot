@@ -2,6 +2,7 @@
 
 import { UserButton } from "@clerk/nextjs";
 import {
+	Database,
 	Factory,
 	Flame,
 	Home,
@@ -319,6 +320,13 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 						</a>
 						<a
 							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+							href="/dashboard/ceda"
+						>
+							<Database className="size-5 stroke-current" />
+							<span>CEDA</span>
+						</a>
+						<a
+							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
 							href="/dashboard/actions"
 						>
 							<Target className="size-5 stroke-current" />
@@ -401,113 +409,123 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 							</Card>
 						</div>
 						{/* Key Metrics Cards */}
-						<div className="grid @5xl/main:grid-cols-4 @xl/main:grid-cols-2 grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6">
-							<Card className="@container/card" data-slot="card">
-								<CardHeader className="relative">
-									<CardDescription>Total Emissions</CardDescription>
-									<CardTitle className="font-semibold @[250px]/card:text-3xl text-2xl tabular-nums">
+						<div className="grid @5xl/main:grid-cols-4 @xl/main:grid-cols-2 grid-cols-1 gap-4 px-4 lg:px-6">
+							<Card className="group relative flex flex-col overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card shadow-sm transition-all hover:border-primary/40 hover:shadow-md">
+								<div className="absolute top-0 right-0 h-32 w-32 bg-gradient-to-br from-primary/10 to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
+								<CardHeader className="relative flex-1 space-y-3 pb-3">
+									<div className="flex items-center justify-between">
+										<CardDescription className="font-medium text-xs uppercase tracking-wide">
+											Total Emissions
+										</CardDescription>
+										<div className="rounded-full bg-primary/10 p-2">
+											<TrendingDown className="size-4 stroke-current text-primary" />
+										</div>
+									</div>
+									<CardTitle className="font-bold text-4xl tabular-nums tracking-tight">
 										{data.footprint.totalKgCO2eAnnual.toLocaleString()}
 									</CardTitle>
-									<div className="absolute top-4 right-4">
-										<Badge
-											className="flex gap-1 rounded-lg text-xs"
-											variant="outline"
-										>
-											<TrendingDown className="size-3" />
-											Annual
-										</Badge>
-									</div>
+									<p className="text-muted-foreground text-sm">
+										kg CO2e per year
+									</p>
 								</CardHeader>
-								<CardFooter className="flex-col items-start gap-1 text-sm">
-									<div className="line-clamp-1 flex gap-2 font-medium">
-										Total carbon footprint <TrendingDown className="size-4" />
-									</div>
-									<div className="text-muted-foreground">kg CO2e per year</div>
+								<CardFooter className="relative items-start justify-start pt-0">
+									<Badge
+										className="bg-primary/10 text-primary text-xs"
+										variant="secondary"
+									>
+										Annual
+									</Badge>
 								</CardFooter>
 							</Card>
 
-							<Card className="@container/card" data-slot="card">
-								<CardHeader className="relative">
-									<CardDescription>Largest Source</CardDescription>
-									<CardTitle className="font-semibold @[250px]/card:text-3xl text-2xl">
-										{largestEmissionSource?.category ?? "N/A"}
-									</CardTitle>
-									<div className="absolute top-4 right-4">
-										<Badge
-											className="flex gap-1 rounded-lg text-xs"
-											variant="outline"
-										>
+							<Card className="group relative flex flex-col overflow-hidden border-chart-2/20 bg-gradient-to-br from-chart-2/5 via-card to-card shadow-sm transition-all hover:border-chart-2/40 hover:shadow-md">
+								<div className="absolute top-0 right-0 h-32 w-32 bg-gradient-to-br from-chart-2/10 to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
+								<CardHeader className="relative flex-1 space-y-3 pb-3">
+									<div className="flex items-center justify-between">
+										<CardDescription className="font-medium text-xs uppercase tracking-wide">
+											Largest Source
+										</CardDescription>
+										<div className="rounded-full bg-chart-2/10 p-2">
 											{(() => {
 												const Icon = getCategoryIcon(
 													largestEmissionSource?.category ?? "",
 												);
-												return <Icon className="size-3" />;
+												return <Icon className="size-4 stroke-current text-chart-2" />;
 											})()}
-											{largestEmissionSource?.percent.toFixed(0) ?? 0}%
-										</Badge>
+										</div>
 									</div>
+									<CardTitle className="line-clamp-2 font-bold text-3xl tracking-tight">
+										{largestEmissionSource?.category ?? "N/A"}
+									</CardTitle>
+									<p className="text-muted-foreground text-sm">
+										{largestEmissionSource?.kgCO2e.toLocaleString() ?? 0} kg CO2e
+										({largestEmissionSource?.percent.toFixed(0) ?? 0}%)
+									</p>
 								</CardHeader>
-								<CardFooter className="flex-col items-start gap-1 text-sm">
-									<div className="line-clamp-1 flex gap-2 font-medium">
-										Primary emission source <TrendingUp className="size-4" />
-									</div>
-									<div className="text-muted-foreground">
-										{largestEmissionSource?.kgCO2e.toLocaleString() ?? 0} kg
-										CO2e annually
-									</div>
+								<CardFooter className="relative items-start justify-start pt-0">
+									<Badge
+										className="bg-chart-2/10 text-chart-2 text-xs"
+										variant="secondary"
+									>
+										Primary Source
+									</Badge>
 								</CardFooter>
 							</Card>
 
-							<Card className="@container/card" data-slot="card">
-								<CardHeader className="relative">
-									<CardDescription>Priority Action</CardDescription>
-									<CardTitle className="line-clamp-2 font-semibold @[250px]/card:text-2xl text-xl">
+							<Card className="group relative flex flex-col overflow-hidden border-destructive/20 bg-gradient-to-br from-destructive/5 via-card to-card shadow-sm transition-all hover:border-destructive/40 hover:shadow-md">
+								<div className="absolute top-0 right-0 h-32 w-32 bg-gradient-to-br from-destructive/10 to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
+								<CardHeader className="relative flex-1 space-y-3 pb-3">
+									<div className="flex items-center justify-between">
+										<CardDescription className="font-medium text-xs uppercase tracking-wide">
+											Priority Action
+										</CardDescription>
+										<div className="rounded-full bg-destructive/10 p-2">
+											<Target className="size-4 stroke-current text-destructive" />
+										</div>
+									</div>
+									<CardTitle className="line-clamp-2 min-h-[4rem] font-bold text-2xl leading-tight tracking-tight">
 										{data.dashboard.prioritizedNextStep.title}
 									</CardTitle>
-									<div className="absolute top-4 right-4">
-										<Badge
-											className="flex gap-1 rounded-lg text-xs"
-											variant="outline"
-										>
-											<Target className="size-3" />
-											{data.dashboard.prioritizedNextStep.impact}
-										</Badge>
-									</div>
-								</CardHeader>
-								<CardFooter className="flex-col items-start gap-1 text-sm">
-									<div className="line-clamp-1 flex gap-2 font-medium">
-										Top recommended action <TrendingUp className="size-4" />
-									</div>
-									<div className="text-muted-foreground">
-										{data.dashboard.prioritizedNextStep.cost} cost,{" "}
+									<p className="text-muted-foreground text-sm">
+										{data.dashboard.prioritizedNextStep.cost} •{" "}
 										{data.dashboard.prioritizedNextStep.paybackPeriod}
-									</div>
+									</p>
+								</CardHeader>
+								<CardFooter className="relative items-start justify-start pt-0">
+									<Badge
+										className="bg-destructive/10 text-destructive text-xs"
+										variant="secondary"
+									>
+										{data.dashboard.prioritizedNextStep.impact} Impact
+									</Badge>
 								</CardFooter>
 							</Card>
 
-							<Card className="@container/card" data-slot="card">
-								<CardHeader className="relative">
-									<CardDescription>Quick Wins</CardDescription>
-									<CardTitle className="font-semibold @[250px]/card:text-3xl text-2xl tabular-nums">
+							<Card className="group relative flex flex-col overflow-hidden border-chart-4/20 bg-gradient-to-br from-chart-4/5 via-card to-card shadow-sm transition-all hover:border-chart-4/40 hover:shadow-md">
+								<div className="absolute top-0 right-0 h-32 w-32 bg-gradient-to-br from-chart-4/10 to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
+								<CardHeader className="relative flex-1 space-y-3 pb-3">
+									<div className="flex items-center justify-between">
+										<CardDescription className="font-medium text-xs uppercase tracking-wide">
+											Quick Wins
+										</CardDescription>
+										<div className="rounded-full bg-chart-4/10 p-2">
+											<Lightbulb className="size-4 stroke-current text-chart-4" />
+										</div>
+									</div>
+									<CardTitle className="font-bold text-4xl tabular-nums tracking-tight">
 										{data.dashboard.quickWins.length}
 									</CardTitle>
-									<div className="absolute top-4 right-4">
-										<Badge
-											className="flex gap-1 rounded-lg text-xs"
-											variant="outline"
-										>
-											<Lightbulb className="size-3" />
-											Ready
-										</Badge>
-									</div>
+									<p className="text-muted-foreground text-sm">
+										Low-cost actions available
+									</p>
 								</CardHeader>
-								<CardFooter className="flex-col items-start gap-1 text-sm">
-									<div className="line-clamp-1 flex gap-2 font-medium">
-										Low-cost actions available <TrendingUp className="size-4" />
-									</div>
-									<div className="text-muted-foreground">
-										Implementable in 1-3 months
-									</div>
+								<CardFooter className="relative items-start justify-start pt-0">
+									<Badge
+										className="bg-chart-4/10 text-chart-4 text-xs"
+										variant="secondary"
+									>
+										1-3 Months
+									</Badge>
 								</CardFooter>
 							</Card>
 						</div>
@@ -832,7 +850,7 @@ function DashboardSkeleton() {
 						</div>
 					</div>
 					<div className="flex-1 space-y-2 overflow-y-auto p-4">
-						{["home", "footprint", "actions", "settings"].map((item) => (
+						{["home", "footprint", "ceda", "actions", "settings"].map((item) => (
 							<Skeleton className="h-12 w-full rounded-lg" key={item} />
 						))}
 					</div>

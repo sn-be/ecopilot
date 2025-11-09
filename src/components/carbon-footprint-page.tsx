@@ -2,6 +2,7 @@
 
 import { UserButton } from "@clerk/nextjs";
 import {
+	Database,
 	Factory,
 	Flame,
 	Home,
@@ -199,6 +200,13 @@ export function CarbonFootprintPage({ userId }: CarbonFootprintPageProps) {
 						>
 							<TrendingDown className="size-5 stroke-current" />
 							<span className="font-medium">Carbon Footprint</span>
+						</a>
+						<a
+							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+							href="/dashboard/ceda"
+						>
+							<Database className="size-5 stroke-current" />
+							<span>CEDA</span>
 						</a>
 						<a
 							className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"

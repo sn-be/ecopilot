@@ -120,3 +120,26 @@ export const completedActions = createTable(
 		index("completed_action_actionId_idx").on(t.actionId),
 	],
 );
+
+export const cedaSpendingEntries = createTable(
+	"ceda_spending_entry",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		category: d.text({ length: 512 }).notNull(), // CEDA category (e.g., "Marketing Consultants")
+		spendAmount: d.real().notNull(), // Amount spent in USD
+		emissionFactor: d.real().notNull(), // kg CO2e per USD
+		totalEmissions: d.real().notNull(), // Total kg CO2e calculated
+		country: d.text({ length: 256 }).notNull(), // Country used for calculation
+		description: d.text({ length: 1024 }), // Optional user description
+		createdAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+		updatedAt: d.integer({ mode: "timestamp" }).$onUpdate(() => new Date()),
+	}),
+	(t) => [
+		index("ceda_spending_userId_idx").on(t.userId),
+		index("ceda_spending_createdAt_idx").on(t.createdAt),
+	],
+);
