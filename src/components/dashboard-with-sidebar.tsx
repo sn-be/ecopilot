@@ -138,14 +138,9 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 		if (!data?.footprint.breakdown || data.footprint.breakdown.length === 0) {
 			return null;
 		}
-		return data.footprint.breakdown.reduce(
-			(
-				max: { category: string; kgCO2e: number; percent: number },
-				current: { category: string; kgCO2e: number; percent: number },
-			) => {
-				return current.percent > max.percent ? current : max;
-			},
-		);
+		return data.footprint.breakdown.reduce((max: { category: string; kgCO2e: number; percent: number }, current: { category: string; kgCO2e: number; percent: number }) => {
+			return current.percent > max.percent ? current : max;
+		}, data.footprint.breakdown[0]);
 	}, [data?.footprint.breakdown]);
 
 	// Prepare business context for chat widget
