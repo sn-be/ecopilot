@@ -3,12 +3,12 @@
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+	ArrowLeft,
+	Briefcase,
 	Building2,
 	MapPin,
 	Users,
 	Zap,
-	Briefcase,
-	ArrowLeft,
 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -466,6 +466,8 @@ export function OnboardingFlow() {
 		}
 	};
 
+	const calculateFootprint = api.footprint.calculateAndGenerate.useMutation();
+
 	const onSubmitStep4 = async (data: Step4FormData) => {
 		if (!user?.id) {
 			toast.error("User not found. Please sign in again.");
@@ -474,10 +476,26 @@ export function OnboardingFlow() {
 
 		setIsSubmitting(true);
 		try {
+			// Save Step 4 data
 			await saveStep4.mutateAsync({
 				userId: user.id,
 				...data,
 			});
+
+			// Calculate footprint and generate dashboard
+			toast.loading("Calculating your carbon footprint...");
+			await calculateFootprint.mutateAsync({ userId: user.id });
+			
+			toast.success("Your sustainability dashboard is ready!");
+			
+			// Redirect to dashboard
+			window.location.href = "/dashboard";
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to calculate footprint. Please try again.",
+			);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -489,13 +507,40 @@ export function OnboardingFlow() {
 	const renderStepContent = () => {
 		switch (currentStep) {
 			case 1:
-				return <Step1 form={step1Form} onSubmit={onSubmitStep1} isSubmitting={isSubmitting} />;
+				return (
+					<Step1
+						form={step1Form}
+						isSubmitting={isSubmitting}
+						onSubmit={onSubmitStep1}
+					/>
+				);
 			case 2:
-				return <Step2 form={step2Form} onSubmit={onSubmitStep2} isSubmitting={isSubmitting} onBack={() => setCurrentStep(1)} />;
+				return (
+					<Step2
+						form={step2Form}
+						isSubmitting={isSubmitting}
+						onBack={() => setCurrentStep(1)}
+						onSubmit={onSubmitStep2}
+					/>
+				);
 			case 3:
-				return <Step3 form={step3Form} onSubmit={onSubmitStep3} isSubmitting={isSubmitting} onBack={() => setCurrentStep(2)} />;
+				return (
+					<Step3
+						form={step3Form}
+						isSubmitting={isSubmitting}
+						onBack={() => setCurrentStep(2)}
+						onSubmit={onSubmitStep3}
+					/>
+				);
 			case 4:
-				return <Step4 form={step4Form} onSubmit={onSubmitStep4} isSubmitting={isSubmitting} onBack={() => setCurrentStep(3)} />;
+				return (
+					<Step4
+						form={step4Form}
+						isSubmitting={isSubmitting}
+						onBack={() => setCurrentStep(3)}
+						onSubmit={onSubmitStep4}
+					/>
+				);
 			default:
 				return null;
 		}
@@ -516,10 +561,10 @@ export function OnboardingFlow() {
 							const stepNumber = index + 1;
 							return (
 								<div
-									key={`step-${stepNumber}`}
 									className={`h-2 flex-1 rounded-full transition-all duration-500 ${
 										stepNumber <= currentStep ? "bg-primary" : "bg-muted"
 									}`}
+									key={`step-${stepNumber}`}
 								/>
 							);
 						})}
@@ -601,15 +646,17 @@ function Step1({
 									<FormLabel className="text-base">Industry</FormLabel>
 									<FormControl>
 										<Combobox
-											value={field.value}
+											emptyText="No industry found."
 											onValueChange={field.onChange}
 											options={industries}
 											placeholder="Select your industry"
 											searchPlaceholder="Search industries..."
-											emptyText="No industry found."
+											value={field.value}
 										/>
 									</FormControl>
-									<FormDescription>Your primary business sector</FormDescription>
+									<FormDescription>
+										Your primary business sector
+									</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -625,12 +672,12 @@ function Step1({
 										<FormLabel className="text-base">Country</FormLabel>
 										<FormControl>
 											<Combobox
-												value={field.value}
+												emptyText="No country found."
 												onValueChange={field.onChange}
 												options={countries}
 												placeholder="Select country"
 												searchPlaceholder="Search country..."
-												emptyText="No country found."
+												value={field.value}
 											/>
 										</FormControl>
 										<FormMessage />
@@ -724,10 +771,12 @@ function Step2({
 							name="numberOfEmployees"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-base">Number of Employees</FormLabel>
+									<FormLabel className="text-base">
+										Number of Employees
+									</FormLabel>
 									<Select
-										value={field.value?.toString() ?? ""}
 										onValueChange={(value) => field.onChange(Number(value))}
+										value={field.value?.toString() ?? ""}
 									>
 										<FormControl>
 											<SelectTrigger className="w-full">
@@ -763,9 +812,9 @@ function Step2({
 										<FormLabel className="text-base">Location Size</FormLabel>
 										<FormControl>
 											<Input
-												type="number"
 												min={1}
 												placeholder="e.g., 5000"
+												type="number"
 												{...field}
 												onChange={(e) => field.onChange(Number(e.target.value))}
 											/>
@@ -782,16 +831,16 @@ function Step2({
 									<FormItem>
 										<FormControl>
 											<RadioGroup
-												value={field.value}
-												onValueChange={field.onChange}
 												className="flex gap-4"
+												onValueChange={field.onChange}
+												value={field.value}
 											>
 												<div className="flex items-center space-x-2">
-													<RadioGroupItem value="sqft" id="sqft" />
+													<RadioGroupItem id="sqft" value="sqft" />
 													<Label htmlFor="sqft">Square feet (sq. ft.)</Label>
 												</div>
 												<div className="flex items-center space-x-2">
-													<RadioGroupItem value="sqm" id="sqm" />
+													<RadioGroupItem id="sqm" value="sqm" />
 													<Label htmlFor="sqm">Square meters (sq. m.)</Label>
 												</div>
 											</RadioGroup>
@@ -814,18 +863,18 @@ function Step2({
 									<FormControl>
 										<ButtonGroup className="w-full">
 											<Button
-												type="button"
-												variant={field.value === "own" ? "default" : "outline"}
 												className="flex-1"
 												onClick={() => field.onChange("own")}
+												type="button"
+												variant={field.value === "own" ? "default" : "outline"}
 											>
 												Own
 											</Button>
 											<Button
-												type="button"
-												variant={field.value === "rent" ? "default" : "outline"}
 												className="flex-1"
 												onClick={() => field.onChange("rent")}
+												type="button"
+												variant={field.value === "rent" ? "default" : "outline"}
 											>
 												Rent
 											</Button>
@@ -839,10 +888,10 @@ function Step2({
 						{/* Navigation Buttons */}
 						<div className="flex justify-between pt-4">
 							<Button
+								disabled={isSubmitting}
+								onClick={onBack}
 								type="button"
 								variant="outline"
-								onClick={onBack}
-								disabled={isSubmitting}
 							>
 								<ArrowLeft className="mr-2 size-4 stroke-current" />
 								Back
@@ -907,22 +956,24 @@ function Step3({
 							name="dataInputMethod"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-base">How would you like to enter your electricity usage?</FormLabel>
+									<FormLabel className="text-base">
+										How would you like to enter your electricity usage?
+									</FormLabel>
 									<FormControl>
 										<RadioGroup
-											value={field.value}
-											onValueChange={field.onChange}
 											className="space-y-3"
+											onValueChange={field.onChange}
+											value={field.value}
 										>
 											<div className="flex items-center space-x-2">
-												<RadioGroupItem value="kwh" id="kwh" />
-												<Label htmlFor="kwh" className="font-normal">
+												<RadioGroupItem id="kwh" value="kwh" />
+												<Label className="font-normal" htmlFor="kwh">
 													I have my kWh usage
 												</Label>
 											</div>
 											<div className="flex items-center space-x-2">
-												<RadioGroupItem value="amount" id="amount" />
-												<Label htmlFor="amount" className="font-normal">
+												<RadioGroupItem id="amount" value="amount" />
+												<Label className="font-normal" htmlFor="amount">
 													I only have the dollar amount
 												</Label>
 											</div>
@@ -945,17 +996,17 @@ function Step3({
 										</FormLabel>
 										<FormControl>
 											<Input
-												type="number"
 												min={0}
-												step={0.01}
 												placeholder="e.g., 1500"
+												step={0.01}
+												type="number"
 												{...field}
-												value={field.value ?? ""}
 												onChange={(e) =>
 													field.onChange(
 														e.target.value ? Number(e.target.value) : undefined,
 													)
 												}
+												value={field.value ?? ""}
 											/>
 										</FormControl>
 										<FormDescription>
@@ -980,17 +1031,19 @@ function Step3({
 											</FormLabel>
 											<FormControl>
 												<Input
-													type="number"
 													min={0}
-													step={0.01}
 													placeholder="e.g., 150"
+													step={0.01}
+													type="number"
 													{...field}
-													value={field.value ?? ""}
 													onChange={(e) =>
 														field.onChange(
-															e.target.value ? Number(e.target.value) : undefined,
+															e.target.value
+																? Number(e.target.value)
+																: undefined,
 														)
 													}
+													value={field.value ?? ""}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -1005,8 +1058,8 @@ function Step3({
 										<FormItem>
 											<FormLabel className="text-base">Currency</FormLabel>
 											<Select
-												value={field.value}
 												onValueChange={field.onChange}
+												value={field.value}
 											>
 												<FormControl>
 													<SelectTrigger className="w-full">
@@ -1040,8 +1093,8 @@ function Step3({
 												Main Heating Fuel (Optional)
 											</FormLabel>
 											<Select
-												value={field.value}
 												onValueChange={field.onChange}
+												value={field.value}
 											>
 												<FormControl>
 													<SelectTrigger className="w-full">
@@ -1049,10 +1102,16 @@ function Step3({
 													</SelectTrigger>
 												</FormControl>
 												<SelectContent>
-													<SelectItem value="none">No heating / Electric</SelectItem>
-													<SelectItem value="natural-gas">Natural Gas</SelectItem>
+													<SelectItem value="none">
+														No heating / Electric
+													</SelectItem>
+													<SelectItem value="natural-gas">
+														Natural Gas
+													</SelectItem>
 													<SelectItem value="propane">Propane</SelectItem>
-													<SelectItem value="heating-oil">Heating Oil</SelectItem>
+													<SelectItem value="heating-oil">
+														Heating Oil
+													</SelectItem>
 													<SelectItem value="wood">Wood</SelectItem>
 													<SelectItem value="other">Other</SelectItem>
 												</SelectContent>
@@ -1075,12 +1134,11 @@ function Step3({
 														</FormLabel>
 														<FormControl>
 															<Input
-																type="number"
 																min={0}
-																step={0.01}
 																placeholder="e.g., 50"
+																step={0.01}
+																type="number"
 																{...field}
-																value={field.value ?? ""}
 																onChange={(e) =>
 																	field.onChange(
 																		e.target.value
@@ -1088,6 +1146,7 @@ function Step3({
 																			: undefined,
 																	)
 																}
+																value={field.value ?? ""}
 															/>
 														</FormControl>
 														<FormMessage />
@@ -1102,8 +1161,8 @@ function Step3({
 													<FormItem>
 														<FormLabel className="text-base">Unit</FormLabel>
 														<Select
-															value={field.value}
 															onValueChange={field.onChange}
+															value={field.value}
 														>
 															<FormControl>
 																<SelectTrigger className="w-full">
@@ -1114,7 +1173,9 @@ function Step3({
 																<SelectItem value="therms">Therms</SelectItem>
 																<SelectItem value="ccf">CCF</SelectItem>
 																<SelectItem value="gallons">Gallons</SelectItem>
-																<SelectItem value="dollars">Dollars ($)</SelectItem>
+																<SelectItem value="dollars">
+																	Dollars ($)
+																</SelectItem>
 															</SelectContent>
 														</Select>
 														<FormMessage />
@@ -1130,10 +1191,10 @@ function Step3({
 						<div className="flex flex-col gap-3 pt-4">
 							<div className="flex justify-between">
 								<Button
+									disabled={isSubmitting}
+									onClick={onBack}
 									type="button"
 									variant="outline"
-									onClick={onBack}
-									disabled={isSubmitting}
 								>
 									<ArrowLeft className="mr-2 size-4 stroke-current" />
 									Back
@@ -1150,11 +1211,11 @@ function Step3({
 
 							{/* Skip Button */}
 							<Button
+								className="w-full"
+								disabled={isSubmitting}
+								onClick={handleSkip}
 								type="button"
 								variant="ghost"
-								onClick={handleSkip}
-								disabled={isSubmitting}
-								className="w-full"
 							>
 								I'll do this later - Skip for now
 							</Button>
@@ -1211,18 +1272,18 @@ function Step4({
 									<FormControl>
 										<ButtonGroup className="w-full">
 											<Button
-												type="button"
-												variant={field.value ? "default" : "outline"}
 												className="flex-1"
 												onClick={() => field.onChange(true)}
+												type="button"
+												variant={field.value ? "default" : "outline"}
 											>
 												Yes
 											</Button>
 											<Button
-												type="button"
-												variant={!field.value ? "default" : "outline"}
 												className="flex-1"
 												onClick={() => field.onChange(false)}
+												type="button"
+												variant={!field.value ? "default" : "outline"}
 											>
 												No
 											</Button>
@@ -1245,16 +1306,16 @@ function Step4({
 										</FormLabel>
 										<FormControl>
 											<Input
-												type="number"
 												min={0}
 												placeholder="e.g., 5"
+												type="number"
 												{...field}
-												value={field.value ?? ""}
 												onChange={(e) =>
 													field.onChange(
 														e.target.value ? Number(e.target.value) : undefined,
 													)
 												}
+												value={field.value ?? ""}
 											/>
 										</FormControl>
 										<FormMessage />
@@ -1272,7 +1333,7 @@ function Step4({
 									<FormLabel className="text-base">
 										How do most employees commute?
 									</FormLabel>
-									<Select value={field.value} onValueChange={field.onChange}>
+									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select commute pattern" />
@@ -1282,9 +1343,7 @@ function Step4({
 											<SelectItem value="mostly-remote">
 												Mostly Remote
 											</SelectItem>
-											<SelectItem value="drive-alone">
-												Drive Alone
-											</SelectItem>
+											<SelectItem value="drive-alone">Drive Alone</SelectItem>
 											<SelectItem value="carpool">Carpool</SelectItem>
 											<SelectItem value="public-transit">
 												Public Transit
@@ -1310,11 +1369,11 @@ function Step4({
 									<FormControl>
 										<div className="space-y-4">
 											<Slider
-												min={0}
 												max={100}
+												min={0}
+												onValueChange={(values) => field.onChange(values[0])}
 												step={1}
 												value={[field.value]}
-												onValueChange={(values) => field.onChange(values[0])}
 											/>
 											<div className="text-center font-medium text-lg">
 												{field.value} {field.value === 1 ? "flight" : "flights"}
@@ -1340,9 +1399,9 @@ function Step4({
 									</FormLabel>
 									<FormControl>
 										<Input
-											type="number"
 											min={0}
 											placeholder="e.g., 10"
+											type="number"
 											{...field}
 											onChange={(e) => field.onChange(Number(e.target.value))}
 										/>
@@ -1358,10 +1417,10 @@ function Step4({
 						{/* Navigation Buttons */}
 						<div className="flex justify-between pt-4">
 							<Button
+								disabled={isSubmitting}
+								onClick={onBack}
 								type="button"
 								variant="outline"
-								onClick={onBack}
-								disabled={isSubmitting}
 							>
 								<ArrowLeft className="mr-2 size-4 stroke-current" />
 								Back

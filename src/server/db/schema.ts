@@ -66,3 +66,39 @@ export const onboardingData = createTable(
 	}),
 	(t) => [index("userId_idx").on(t.userId)],
 );
+
+export const carbonFootprints = createTable(
+	"carbon_footprint",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		totalKgCO2eAnnual: d.real().notNull(),
+		dataSource: d.text(),
+		breakdown: d.text({ mode: "json" }).notNull(), // JSON array
+		calculationNotes: d.text(),
+		recommendations: d.text({ mode: "json" }), // JSON array
+		createdAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+	}),
+	(t) => [index("footprint_userId_idx").on(t.userId)],
+);
+
+export const dashboards = createTable(
+	"dashboard",
+	(d) => ({
+		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		userId: d.text({ length: 256 }).notNull(),
+		footprintId: d.integer().notNull(),
+		executiveSummary: d.text().notNull(),
+		prioritizedNextStep: d.text({ mode: "json" }).notNull(), // JSON object
+		quickWins: d.text({ mode: "json" }).notNull(), // JSON array
+		fullActionPlan: d.text({ mode: "json" }).notNull(), // JSON array
+		createdAt: d
+			.integer({ mode: "timestamp" })
+			.default(sql`(unixepoch())`)
+			.notNull(),
+	}),
+	(t) => [index("dashboard_userId_idx").on(t.userId)],
+);

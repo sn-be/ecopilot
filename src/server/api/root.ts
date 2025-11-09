@@ -1,3 +1,4 @@
+import { footprintRouter } from "@/server/api/routers/footprint";
 import { onboardingRouter } from "@/server/api/routers/onboarding";
 import { postRouter } from "@/server/api/routers/post";
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
@@ -10,6 +11,7 @@ import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
 export const appRouter = createTRPCRouter({
 	post: postRouter,
 	onboarding: onboardingRouter,
+	footprint: footprintRouter,
 });
 
 // export type definition of API

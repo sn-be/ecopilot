@@ -18,6 +18,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@ai-sdk/azure": "^2.0.66",
 		"@ai-sdk/openai": "^2.0.64",
 		"@clerk/elements": "^0.23.79",
 		"@clerk/nextjs": "^6.34.5",

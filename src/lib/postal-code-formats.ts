@@ -8,7 +8,10 @@ interface PostalCodeFormat {
 }
 
 const postalCodeFormats: Record<string, PostalCodeFormat> = {
-	"United States": { format: "##### or #####-####", example: "19603 or 19603-1234" },
+	"United States": {
+		format: "##### or #####-####",
+		example: "19603 or 19603-1234",
+	},
 	Canada: { format: "A#A #A#", example: "K1A 0B1" },
 	"United Kingdom": { format: "AA# #AA or AA## #AA", example: "SW1A 1AA" },
 	Germany: { format: "#####", example: "10115" },
@@ -73,4 +76,3 @@ export function getPostalCodeFormat(country: string): PostalCodeFormat {
 		}
 	);
 }
-

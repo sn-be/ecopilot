@@ -11,7 +11,11 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface ComboboxProps {
@@ -36,24 +40,28 @@ export function Combobox({
 	const [open, setOpen] = React.useState(false);
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover onOpenChange={setOpen} open={open}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="outline"
-					role="combobox"
 					aria-expanded={open}
-					className={cn("justify-between", !value && "text-muted-foreground", className)}
+					className={cn(
+						"justify-between",
+						!value && "text-muted-foreground",
+						className,
+					)}
+					role="combobox"
+					variant="outline"
 				>
 					{value ? options.find((option) => option === value) : placeholder}
 					<ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
-				className="p-0"
 				align="start"
+				avoidCollisions={false}
+				className="p-0"
 				side="bottom"
 				sideOffset={4}
-				avoidCollisions={false}
 				style={{
 					width: "var(--radix-popover-trigger-width)",
 				}}
@@ -66,11 +74,11 @@ export function Combobox({
 							{options.map((option) => (
 								<CommandItem
 									key={option}
-									value={option}
 									onSelect={() => {
 										onValueChange(option);
 										setOpen(false);
 									}}
+									value={option}
 								>
 									{option}
 								</CommandItem>
@@ -82,4 +90,3 @@ export function Combobox({
 		</Popover>
 	);
 }
-
