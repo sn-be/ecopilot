@@ -534,7 +534,7 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 												<Pie
 													data={pieChartData}
 													dataKey="emissions"
-													innerRadius={60}
+													innerRadius={80}
 													nameKey="category"
 													strokeWidth={5}
 												>
@@ -553,16 +553,16 @@ export function DashboardWithSidebar({ userId }: DashboardWithSidebarProps) {
 																		y={viewBox.cy}
 																	>
 																		<tspan
-																			className="fill-foreground font-bold text-3xl"
+																			className="fill-foreground font-bold text-2xl"
 																			x={viewBox.cx}
 																			y={viewBox.cy}
 																		>
 																			{totalEmissions.toLocaleString()}
 																		</tspan>
 																		<tspan
-																			className="fill-muted-foreground"
+																			className="fill-muted-foreground text-xs"
 																			x={viewBox.cx}
-																			y={(viewBox.cy || 0) + 24}
+																			y={(viewBox.cy || 0) + 20}
 																		>
 																			kg CO2e
 																		</tspan>
