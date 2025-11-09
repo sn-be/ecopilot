@@ -108,7 +108,7 @@ export const onboardingRouter = createTRPCRouter({
 					heatingFuel: input.heatingFuel,
 					monthlyHeatingAmount: input.monthlyHeatingAmount,
 					heatingUnit: input.heatingUnit,
-					energyDataSkipped: input.energyDataSkipped ? 1 : 0,
+					energyDataSkipped: input.energyDataSkipped,
 					currentStep: 4,
 				})
 				.where(eq(onboardingData.userId, input.userId));
@@ -132,7 +132,7 @@ export const onboardingRouter = createTRPCRouter({
 			await ctx.db
 				.update(onboardingData)
 				.set({
-					hasVehicles: input.hasVehicles ? 1 : 0,
+					hasVehicles: input.hasVehicles,
 					numberOfVehicles: input.numberOfVehicles,
 					employeeCommutePattern: input.employeeCommutePattern,
 					businessFlightsPerYear: input.businessFlightsPerYear,

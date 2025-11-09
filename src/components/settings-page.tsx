@@ -88,7 +88,7 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 			setHeatingFuel(data.heatingFuel ?? "");
 			setMonthlyHeatingAmount(data.monthlyHeatingAmount?.toString() ?? "");
 			setHeatingUnit(data.heatingUnit ?? "");
-			setHasVehicles(data.hasVehicles === 1);
+			setHasVehicles(data.hasVehicles === true);
 			setNumberOfVehicles(data.numberOfVehicles?.toString() ?? "");
 			setEmployeeCommutePattern(data.employeeCommutePattern ?? "");
 			setBusinessFlightsPerYear(data.businessFlightsPerYear?.toString() ?? "");

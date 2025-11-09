@@ -129,7 +129,7 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 	const categories = useMemo(() => {
 		if (!data) return [];
 		const cats = new Set(
-			data.dashboard.fullActionPlan.map((action) => action.category),
+			data.dashboard.fullActionPlan.map((action: EcoPilotDashboard["fullActionPlan"][number]) => action.category),
 		);
 		return Array.from(cats).sort();
 	}, [data]);
@@ -140,7 +140,7 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 	// Filter actions
 	const filteredActions = useMemo(() => {
 		if (!data) return [];
-		return data.dashboard.fullActionPlan.filter((action) => {
+		return data.dashboard.fullActionPlan.filter((action: EcoPilotDashboard["fullActionPlan"][number]) => {
 			if (selectedCategory && action.category !== selectedCategory)
 				return false;
 			if (selectedImpact && action.impact !== selectedImpact) return false;
@@ -305,10 +305,10 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 											{categories.map((category) => (
 												<Badge
 													className="cursor-pointer transition-all hover:shadow-sm"
-													key={category}
+													key={category as string}
 													onClick={() =>
 														setSelectedCategory(
-															selectedCategory === category ? null : category,
+															selectedCategory === category ? null : category as string,
 														)
 													}
 													variant={
@@ -317,7 +317,7 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 															: "outline"
 													}
 												>
-													{category}
+													{category as string}
 												</Badge>
 											))}
 										</div>
@@ -332,10 +332,10 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 											{impacts.map((impact) => (
 												<Badge
 													className="cursor-pointer transition-all hover:shadow-sm"
-													key={impact}
+													key={impact as string}
 													onClick={() =>
 														setSelectedImpact(
-															selectedImpact === impact ? null : impact,
+															selectedImpact === impact ? null : impact as string	,
 														)
 													}
 													variant={
@@ -467,12 +467,6 @@ export function ActionPlanPage({ userId }: ActionPlanPageProps) {
 																<p className="text-muted-foreground text-sm leading-relaxed">
 																	{action.description}
 																</p>
-															</div>
-															<div className="flex flex-wrap gap-2 border-t pt-3">
-																<div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-																	<span className="font-medium">Payback:</span>
-																	<span>{action.paybackPeriod}</span>
-																</div>
 															</div>
 														</div>
 													</div>

@@ -48,7 +48,6 @@ export async function POST(req: Request) {
 				content: m.content,
 			})),
 			temperature: 0.7,
-			maxTokens: 500,
 		});
 
 		return NextResponse.json({
