@@ -2,6 +2,14 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import {
+	ClerkProvider,
+	SignInButton,
+	SignUpButton,
+	SignedIn,
+	SignedOut,
+	UserButton,
+} from "@clerk/nextjs";
 
 import { TRPCReactProvider } from "@/trpc/react";
 
@@ -20,10 +28,21 @@ export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html className={`${geist.variable}`} lang="en">
-			<body>
-				<TRPCReactProvider>{children}</TRPCReactProvider>
-			</body>
-		</html>
+		<ClerkProvider>
+			<html className={`${geist.variable}`} lang="en">
+				<body>
+					<header>
+						<SignedOut>
+							<SignInButton />
+							<SignUpButton />
+						</SignedOut>
+						<SignedIn>
+							<UserButton />
+						</SignedIn>
+					</header>
+					<TRPCReactProvider>{children}</TRPCReactProvider>
+				</body>
+			</html>
+		</ClerkProvider>
 	);
 }
