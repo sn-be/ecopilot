@@ -2,15 +2,8 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import {
-	ClerkProvider,
-	SignInButton,
-	SignUpButton,
-	SignedIn,
-	SignedOut,
-	UserButton,
-} from "@clerk/nextjs";
-
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/themes";
 import { TRPCReactProvider } from "@/trpc/react";
 
 export const metadata: Metadata = {
@@ -28,18 +21,13 @@ export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<ClerkProvider>
-			<html className={`${geist.variable}`} lang="en">
+		<ClerkProvider
+			appearance={{
+				baseTheme: shadcn,
+			}}
+		>
+			<html className={`${geist.variable} dark`} lang="en">
 				<body>
-					<header>
-						<SignedOut>
-							<SignInButton />
-							<SignUpButton />
-						</SignedOut>
-						<SignedIn>
-							<UserButton />
-						</SignedIn>
-					</header>
 					<TRPCReactProvider>{children}</TRPCReactProvider>
 				</body>
 			</html>
