@@ -26,6 +26,7 @@ export default function RootLayout({
 			appearance={{
 				baseTheme: shadcn,
 			}}
+			afterSignOutUrl="https://ecopilot.app"
 		>
 			<html className={`${outfit.variable} dark`} lang="en">
 				<body>
